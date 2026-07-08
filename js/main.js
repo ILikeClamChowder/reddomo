@@ -37,11 +37,11 @@
       art.style.backgroundImage = `url("${game.thumb}")`;
     } else {
       art.style.background =
-        `radial-gradient(120% 120% at 30% 20%, ${mix(game.color)}, ${game.color})`;
-      const letter = document.createElement("span");
-      letter.className = "letter";
-      letter.textContent = game.title.charAt(0);
-      art.appendChild(letter);
+        `radial-gradient(120% 130% at 28% 18%, ${mix(game.color)}, ${game.color} 62%, ${shade(game.color)})`;
+      const glyph = document.createElement("span");
+      if (game.icon) { glyph.className = "emoji"; glyph.textContent = game.icon; }
+      else { glyph.className = "letter"; glyph.textContent = game.title.charAt(0); }
+      art.appendChild(glyph);
     }
     const badge = document.createElement("span");
     if (external) { badge.className = "tile-badge ext"; badge.textContent = "official ↗"; art.appendChild(badge); }
@@ -75,6 +75,12 @@
     const n = parseInt(c.length === 3 ? c.replace(/(.)/g, "$1$1") : c, 16);
     let r = (n >> 16) + 40, g = ((n >> 8) & 255) + 40, b = (n & 255) + 40;
     r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
+    return `rgb(${r},${g},${b})`;
+  }
+  function shade(hex) {
+    const c = hex.replace("#", "");
+    const n = parseInt(c.length === 3 ? c.replace(/(.)/g, "$1$1") : c, 16);
+    const r = Math.max(0, (n >> 16) - 55), g = Math.max(0, ((n >> 8) & 255) - 55), b = Math.max(0, (n & 255) - 55);
     return `rgb(${r},${g},${b})`;
   }
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
