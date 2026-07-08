@@ -37,6 +37,12 @@ const CATALOG = [
     blurb: "Slide the tiles, chase that 2048.",
     thumb: "assets/thumbs/2048.svg", icon: "🔢", color: "#e0a92a", featured: true,
   },
+  {
+    id: "doom", title: "DOOM", cat: "Arcade",
+    tags: ["fps", "shooter", "retro", "id software", "classic", "1993"], type: "self",
+    blurb: "The 1993 original — Episode 1 shareware, running right in your browser.",
+    icon: "👹", color: "#7a1a12", featured: true,
+  },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
   {

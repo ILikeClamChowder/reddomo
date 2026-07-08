@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DOOM</title>
+<link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: system-ui, sans-serif; color: #f6ede8; }
+  #dos { position: fixed; inset: 0; }
+  #msg {
+    position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 14px; background: radial-gradient(70% 70% at 50% 40%, #1a0c0a, #060403); padding: 20px;
+  }
+  #msg.hidden { display: none; }
+  #msg h1 { font-size: clamp(2.4rem, 9vw, 4rem); margin: 0; letter-spacing: .12em; font-weight: 900;
+    color: #e5352c; text-shadow: 0 0 26px rgba(229,53,44,.55); }
+  #msg p { color: #b09a92; margin: 0; font-size: .98rem; max-width: 36ch; }
+  button { font: inherit; font-weight: 800; font-size: 1.05rem; padding: 13px 26px; border: none; border-radius: 999px;
+    cursor: pointer; color: #1a0f0d; background: linear-gradient(180deg, #ff5a4a, #e5352c); box-shadow: 0 10px 24px -8px rgba(229,53,44,.6); }
+  button:hover { filter: brightness(1.08); }
+  .tip { font-size: .8rem; color: #7a655c; }
+  #loading { font-size: .9rem; color: #b09a92; }
+</style>
+</head>
+<body>
+<div id="dos"></div>
+
+<div id="msg">
+  <h1>DOOM</h1>
+  <p>Episode 1: Knee-Deep in the Dead — the original 1993 shareware, running right here.</p>
+  <button id="start">▶ Click to play</button>
+  <p class="tip">↑↓←→ move · Ctrl fire · Space open doors · Alt+arrows strafe</p>
+  <p id="loading"></p>
+</div>
+
+<script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+<script>
+  var startBtn = document.getElementById("start");
+  var msg = document.getElementById("msg");
+  var loading = document.getElementById("loading");
+
+  startBtn.addEventListener("click", function () {
+    startBtn.style.display = "none";
+    loading.textContent = "Loading DOOM…";
+    try {
+      Dos(document.getElementById("dos"), {
+        url: "doom.jsdos?rev=4",
+        autoStart: true
+      });
+      setTimeout(function () { msg.classList.add("hidden"); }, 400);
+    } catch (e) {
+      loading.textContent = "Error: " + e;
+    }
+  });
+</script>
+</body>
+</html>
