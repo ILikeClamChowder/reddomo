@@ -1,0 +1,9 @@
+{
+  // Tells Cloudflare to deploy this repo as the existing "reddomo" project,
+  // serving the folder as a plain static site (no build step, no Worker code).
+  "name": "reddomo",
+  "compatibility_date": "2026-07-08",
+  "assets": {
+    "directory": "."
+  }
+}
