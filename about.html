@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Reddomo</title>
+  <meta name="description" content="About Reddomo — a small, hand-built arcade of fast, quality browser games. No installs, no accounts." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://reddomo.com/about.html" />
+  <meta name="theme-color" content="#17110f" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Reddomo" />
+  <meta property="og:title" content="About — Reddomo" />
+  <meta property="og:description" content="A small, hand-built arcade of fast, quality browser games." />
+  <meta property="og:url" content="https://reddomo.com/about.html" />
+  <meta property="og:image" content="https://reddomo.com/assets/og.svg" />
+  <link rel="icon" href="assets/domo.svg" />
+  <link rel="apple-touch-icon" href="assets/domo.svg" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/domo.svg" alt="" />
+      <span class="brand-name">Red<span class="red">domo</span></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Games</a>
+      <a href="about.html" class="active">About</a>
+    </nav>
+  </header>
+
+  <main class="prose">
+    <img class="domo-inline" src="assets/domo.svg" alt="Red Domo" />
+    <h1>Hi, I'm Domo.</h1>
+    <p class="lead">Reddomo is a small, hand-built arcade of browser games. No installs, no accounts, no nonsense — click and play.</p>
+    <h2>Quality over quantity</h2>
+    <p>Most game sites throw hundreds of broken links at you. Not here. Every game is picked (or built) to actually work, load fast, and feel good — even on a school Chromebook.</p>
+    <h2>Built to last</h2>
+    <p>The games are self-hosted and open-source wherever possible, plus a few officially-free classics. That means they load quickly and don't vanish when some other website goes down.</p>
+    <h2>More on the way</h2>
+    <p>The shelf grows over time — originals you can't play anywhere else, alongside the classics you already love. Got one you'd like to see? Domo's listening.</p>
+  </main>
+
+  <footer class="site-footer">
+    <span class="foot-brand"><img src="assets/domo.svg" alt="" /> Reddomo</span>
+    <span>© <span id="year"></span> · a little corner of good browser games</span>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="js/disguise.js?v=1"></script>
+</body>
+</html>

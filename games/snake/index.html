@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Snake</title>
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    background: #14100f; color: #f4ecea;
+    font-family: system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+  #wrap { text-align: center; }
+  canvas { background: #1e1817; border-radius: 10px; touch-action: none; max-width: 92vw; max-height: 78vh; }
+  #hud { margin-bottom: 10px; font-weight: 700; letter-spacing: 1px; }
+  #score { color: #ff5a5a; }
+  #msg { margin-top: 12px; color: #b3a4a0; min-height: 1.2em; font-size: 0.95rem; }
+  .key { color: #f4ecea; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">SCORE <span id="score">0</span> &nbsp;·&nbsp; BEST <span id="best">0</span></div>
+  <canvas id="c" width="420" height="420"></canvas>
+  <div id="msg">Press <span class="key">SPACE</span> or tap to start · Arrows / WASD / swipe to steer</div>
+</div>
+<script>
+(function () {
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("score");
+  const bestEl = document.getElementById("best");
+  const msgEl = document.getElementById("msg");
+
+  const CELL = 20;
+  const COLS = canvas.width / CELL;
+  const ROWS = canvas.height / CELL;
+
+  let snake, dir, nextDir, food, score, best, running, dead, tickMs, loop;
+  best = Number(localStorage.getItem("snake_best") || 0);
+  bestEl.textContent = best;
+
+  function reset() {
+    snake = [{ x: 8, y: 10 }, { x: 7, y: 10 }, { x: 6, y: 10 }];
+    dir = { x: 1, y: 0 };
+    nextDir = dir;
+    score = 0;
+    tickMs = 120;
+    dead = false;
+    placeFood();
+    scoreEl.textContent = 0;
+  }
+
+  function placeFood() {
+    while (true) {
+      const f = { x: (Math.random() * COLS) | 0, y: (Math.random() * ROWS) | 0 };
+      if (!snake.some((s) => s.x === f.x && s.y === f.y)) { food = f; return; }
+    }
+  }
+
+  function start() {
+    reset();
+    running = true;
+    msgEl.textContent = "";
+    clearInterval(loop);
+    loop = setInterval(tick, tickMs);
+  }
+
+  function gameOver() {
+    running = false;
+    dead = true;
+    clearInterval(loop);
+    if (score > best) {
+      best = score;
+      localStorage.setItem("snake_best", best);
+      bestEl.textContent = best;
+    }
+    msgEl.innerHTML = 'Game over — press <span class="key">SPACE</span> or tap to play again';
+    draw();
+  }
+
+  function tick() {
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+    if (head.x < 0 || head.y < 0 || head.x >= COLS || head.y >= ROWS ||
+        snake.some((s) => s.x === head.x && s.y === head.y)) {
+      return gameOver();
+    }
+
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      scoreEl.textContent = score;
+      placeFood();
+      if (tickMs > 60 && score % 4 === 0) {   // speed up gradually
+        tickMs -= 6;
+        clearInterval(loop);
+        loop = setInterval(tick, tickMs);
+      }
+    } else {
+      snake.pop();
+    }
+    draw();
+  }
+
+  function draw() {
+    ctx.fillStyle = "#1e1817";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // food
+    ctx.fillStyle = "#ff5a5a";
+    roundRect(food.x * CELL + 3, food.y * CELL + 3, CELL - 6, CELL - 6, 5);
+
+    // snake
+    for (let i = 0; i < snake.length; i++) {
+      ctx.fillStyle = i === 0 ? "#e23b3b" : "#c23838";
+      roundRect(snake[i].x * CELL + 1, snake[i].y * CELL + 1, CELL - 2, CELL - 2, 4);
+    }
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fill();
+  }
+
+  function setDir(x, y) {
+    if (dir.x === -x && dir.y === -y) return; // no 180° reversal
+    nextDir = { x, y };
+  }
+
+  // Keyboard
+  document.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if (k === " " || (dead && k === "enter")) { e.preventDefault(); if (!running) start(); return; }
+    if (k === "arrowup" || k === "w") setDir(0, -1);
+    else if (k === "arrowdown" || k === "s") setDir(0, 1);
+    else if (k === "arrowleft" || k === "a") setDir(-1, 0);
+    else if (k === "arrowright" || k === "d") setDir(1, 0);
+    if (["arrowup","arrowdown","arrowleft","arrowright"].includes(k)) e.preventDefault();
+  });
+
+  // Touch: tap to start, swipe to steer
+  let tsx = 0, tsy = 0;
+  canvas.addEventListener("touchstart", (e) => {
+    if (!running) { start(); }
+    const t = e.changedTouches[0]; tsx = t.clientX; tsy = t.clientY;
+  }, { passive: true });
+  canvas.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - tsx, dy = t.clientY - tsy;
+    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+    if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
+    else setDir(0, dy > 0 ? 1 : -1);
+  }, { passive: true });
+
+  reset();
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Wording kept deliberately neutral (no "unblocked games") to stay uncategorized by school filters.
+       To go aggressive on keyword SEO later, edit the title/description/og below. -->
+  <title>Reddomo — Fun Browser Games, Free &amp; Instant</title>
+  <meta name="description" content="Reddomo is a hand-picked arcade of fun browser games you can play instantly — free, no downloads, no sign-up. Rooftop Rumble, 2048, Minecraft Classic and more." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://reddomo.com/" />
+  <meta name="theme-color" content="#17110f" />
+
+  <!-- Open Graph (link previews for Discord / iMessage / social) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Reddomo" />
+  <meta property="og:title" content="Reddomo — Fun Browser Games, Free &amp; Instant" />
+  <meta property="og:description" content="A hand-picked arcade of fun browser games. Play instantly, free, no downloads." />
+  <meta property="og:url" content="https://reddomo.com/" />
+  <meta property="og:image" content="https://reddomo.com/assets/og.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Reddomo — Fun Browser Games" />
+  <meta name="twitter:description" content="A hand-picked arcade of fun browser games. Play instantly, free." />
+  <meta name="twitter:image" content="https://reddomo.com/assets/og.svg" />
+
+  <link rel="icon" href="assets/domo.svg" />
+  <link rel="apple-touch-icon" href="assets/domo.svg" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Reddomo",
+    "url": "https://reddomo.com/",
+    "description": "A hand-picked arcade of fun browser games you can play instantly, free.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://reddomo.com/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/domo.svg" alt="" />
+      <span class="brand-name">Red<span class="red">domo</span></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html" class="active">Games</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Good games, <span class="red">no clutter.</span></h1>
+        <p class="tagline">A hand-picked arcade that loads fast and runs anywhere. Meet Domo — pick a game and go.</p>
+      </div>
+      <div class="hero-art">
+        <img class="domo" src="assets/domo.svg" alt="Red Domo, the Reddomo mascot" />
+      </div>
+    </section>
+
+    <div class="controls">
+      <div class="search-wrap">
+        <input id="search" class="search" type="search" placeholder="Search games…" autocomplete="off" aria-label="Search games" />
+      </div>
+      <div class="chips" id="chips" role="tablist" aria-label="Categories"></div>
+    </div>
+
+    <div id="featured-section">
+      <div class="section-label">Featured</div>
+      <section class="grid featured" id="featured"></section>
+    </div>
+
+    <div class="section-label" id="all-label">All games</div>
+    <section class="grid" id="grid" aria-live="polite"></section>
+    <p class="empty" id="empty" hidden>No games match that — try another word.</p>
+  </main>
+
+  <footer class="site-footer">
+    <span class="foot-brand"><img src="assets/domo.svg" alt="" /> Reddomo</span>
+    <span>© <span id="year"></span> · a little corner of good browser games</span>
+  </footer>
+
+  <script src="js/catalog.js?v=2"></script>
+  <script src="js/main.js?v=2"></script>
+  <script src="js/disguise.js?v=1"></script>
+</body>
+</html>

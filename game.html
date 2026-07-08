@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reddomo</title>
+  <meta name="description" content="Play instantly on Reddomo — free browser games, no downloads." />
+  <meta name="theme-color" content="#17110f" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Reddomo" />
+  <meta property="og:image" content="https://reddomo.com/assets/og.svg" />
+  <link rel="icon" href="assets/domo.svg" />
+  <link rel="apple-touch-icon" href="assets/domo.svg" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/domo.svg" alt="" />
+      <span class="brand-name">Red<span class="red">domo</span></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">← All games</a>
+    </nav>
+  </header>
+
+  <main class="player-main">
+    <div class="player-bar">
+      <div class="player-heading">
+        <span class="player-cat" id="game-cat"></span>
+        <h1 class="player-title" id="game-title">Loading…</h1>
+        <p class="player-blurb" id="game-blurb"></p>
+      </div>
+      <button id="fullscreen" class="btn">⤢ Fullscreen</button>
+    </div>
+    <div class="player-frame" id="player-frame">
+      <iframe id="game-frame" title="Game" allow="fullscreen; gamepad; autoplay"></iframe>
+    </div>
+    <p class="player-tip" id="game-tip"></p>
+    <p class="empty" id="game-missing" hidden>That game isn't here. <a href="index.html" style="color:var(--red)">Back to all games →</a></p>
+  </main>
+
+  <script src="js/catalog.js?v=2"></script>
+  <script src="js/player.js?v=2"></script>
+  <script src="js/disguise.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "Reddomo",
+  "short_name": "Reddomo",
+  "description": "A hand-picked arcade of fun browser games. Play instantly, free.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#17110f",
+  "theme_color": "#17110f",
+  "icons": [
+    { "src": "assets/domo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
