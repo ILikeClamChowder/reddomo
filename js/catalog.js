@@ -108,6 +108,26 @@ const CATALOG = [
     tags: ["coding", "javascript", "escape"], type: "embed", src: "https://alexnisnevich.github.io/untrusted/",
     blurb: "Escape each level by rewriting its JavaScript. Genius.", icon: "💻", color: "#2fb3a0",
   },
+  {
+    id: "candy-box-2", title: "Candy Box 2", cat: "Idle",
+    tags: ["incremental", "adventure", "ascii"], type: "embed", src: "https://candybox2.github.io/",
+    blurb: "A quirky incremental adventure that keeps unfolding. Eat the candies… or don't.", icon: "🍬", color: "#d94f8a",
+  },
+  {
+    id: "trimps", title: "Trimps", cat: "Idle",
+    tags: ["incremental", "idle", "strategy"], type: "embed", src: "https://trimps.github.io/",
+    blurb: "Deep idle strategy — breed Trimps, explore, and never stop growing.", icon: "📈", color: "#4a9d7f",
+  },
+  {
+    id: "isleward", title: "Isleward", cat: "Multiplayer",
+    tags: ["mmo", "rpg", "roguelike", "online"], type: "embed", src: "https://play.isleward.com/",
+    blurb: "A free browser MMORPG roguelike — level up alongside players worldwide.", icon: "⚔️", color: "#8a4fd0",
+  },
+  {
+    id: "ztype", title: "ZType", cat: "Arcade",
+    tags: ["typing", "shooter", "space", "words"], type: "embed", src: "https://zty.pe/",
+    blurb: "Type the words to blast incoming ships. Fast fingers win.", icon: "⌨️", color: "#2a7de0",
+  },
 
   // ---- links (open on the game's official site; they block embedding) ----
   {
