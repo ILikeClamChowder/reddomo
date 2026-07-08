@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+  <rect width="320" height="320" fill="#12141c"/>
+  <g transform="translate(160 160)">
+    <!-- outer stacked colored trapezoids around a hexagon, 6 sides -->
+    <g stroke="#12141c" stroke-width="3">
+      <!-- ring 2 (outer) -->
+      <g>
+        <path d="M-104 -60 L-52 -90 L-52 -30 L-104 0 Z" fill="#e0447a" transform="rotate(0)"/>
+      </g>
+    </g>
+    <!-- build 6 sectors programmatically-ish via rotation groups -->
+    <g>
+      <g transform="rotate(0)"><path d="M-30 -104 L30 -104 L52 -66 L-52 -66 Z" fill="#4fc4d6"/><path d="M-22 -60 L22 -60 L40 -30 L-40 -30 Z" fill="#4fc4d6" opacity=".85"/></g>
+      <g transform="rotate(60)"><path d="M-30 -104 L30 -104 L52 -66 L-52 -66 Z" fill="#e0447a"/><path d="M-22 -60 L22 -60 L40 -30 L-40 -30 Z" fill="#e0447a" opacity=".85"/></g>
+      <g transform="rotate(120)"><path d="M-30 -104 L30 -104 L52 -66 L-52 -66 Z" fill="#f2c53f"/></g>
+      <g transform="rotate(180)"><path d="M-30 -104 L30 -104 L52 -66 L-52 -66 Z" fill="#54d08a"/><path d="M-22 -60 L22 -60 L40 -30 L-40 -30 Z" fill="#54d08a" opacity=".85"/></g>
+      <g transform="rotate(240)"><path d="M-30 -104 L30 -104 L52 -66 L-52 -66 Z" fill="#9a6cff"/></g>
+      <g transform="rotate(300)"><path d="M-30 -104 L30 -104 L52 -66 L-52 -66 Z" fill="#f2843f"/><path d="M-22 -60 L22 -60 L40 -30 L-40 -30 Z" fill="#f2843f" opacity=".85"/></g>
+    </g>
+    <!-- center hexagon -->
+    <polygon points="-26,-45 26,-45 52,0 26,45 -26,45 -52,0" fill="#1c1f2b" stroke="#2c3140" stroke-width="3"/>
+    <polygon points="-13,-22 13,-22 26,0 13,22 -13,22 -26,0" fill="#252a38"/>
+  </g>
+</svg>

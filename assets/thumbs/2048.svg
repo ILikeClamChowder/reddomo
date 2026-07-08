@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+  <rect width="320" height="320" fill="#241a15"/>
+  <rect x="34" y="34" width="252" height="252" rx="14" fill="#2f231c"/>
+  <g font-family="system-ui, sans-serif" font-weight="800" text-anchor="middle">
+    <!-- row 1 -->
+    <g><rect x="50" y="50" width="52" height="52" rx="7" fill="#3a2c24"/><text x="76" y="86" font-size="26" fill="#f6ede8">2</text></g>
+    <g><rect x="110" y="50" width="52" height="52" rx="7" fill="#463228"/><text x="136" y="86" font-size="26" fill="#f6ede8">4</text></g>
+    <g><rect x="170" y="50" width="52" height="52" rx="7" fill="#e08a3c"/><text x="196" y="86" font-size="26" fill="#1a0f0d">8</text></g>
+    <!-- big 2048 tile spanning -->
+    <g><rect x="110" y="118" width="112" height="112" rx="8" fill="#ff4d42"/><text x="166" y="188" font-size="40" fill="#fff">2048</text></g>
+    <g><rect x="50" y="118" width="52" height="52" rx="7" fill="#efc850"/><text x="76" y="154" font-size="22" fill="#1a0f0d">128</text></g>
+    <g><rect x="50" y="178" width="52" height="52" rx="7" fill="#3a2c24"/><text x="76" y="214" font-size="26" fill="#f6ede8">2</text></g>
+    <g><rect x="230" y="118" width="40" height="40" rx="6" fill="#e5532c"/><text x="250" y="146" font-size="18" fill="#fff">32</text></g>
+  </g>
+</svg>

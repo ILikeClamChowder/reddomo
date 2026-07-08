@@ -11,7 +11,8 @@
 //          "link"  -> opens `src` in a new tab (sites that block embedding)
 //  src     required for "embed" and "link"
 //  blurb   one line shown on the tile / player
-//  icon    an emoji shown on the tile (falls back to the first letter)
+//  thumb   optional image for the tile (overrides icon)
+//  icon    an emoji shown on the tile when there's no thumb (else first letter)
 //  color   tile accent behind the icon
 //  featured true -> highlighted on the homepage
 // ============================================================
@@ -24,22 +25,25 @@ const CATALOG = [
     id: "rooftop-rumble", title: "Rooftop Rumble", cat: "Multiplayer",
     tags: ["2 player", "fight", "physics", "brawler"], type: "self",
     blurb: "Two-player ragdoll brawl on the rooftops. Grab a friend.",
-    icon: "🥊", color: "#e23b3b", featured: true,
+    thumb: "assets/thumbs/rooftop-rumble.svg", icon: "🥊", color: "#e23b3b", featured: true,
   },
   {
     id: "snake", title: "Snake", cat: "Arcade", tags: ["classic", "retro"], type: "self",
-    blurb: "The classic. Eat, grow, don't bite yourself.", icon: "🐍", color: "#2f9e57",
+    blurb: "The classic. Eat, grow, don't bite yourself.",
+    thumb: "assets/thumbs/snake.svg", icon: "🐍", color: "#2f9e57",
   },
   {
     id: "2048", title: "2048", cat: "Puzzle", tags: ["numbers", "slide", "brain"], type: "self",
-    blurb: "Slide the tiles, chase that 2048.", icon: "🔢", color: "#e0a92a", featured: true,
+    blurb: "Slide the tiles, chase that 2048.",
+    thumb: "assets/thumbs/2048.svg", icon: "🔢", color: "#e0a92a", featured: true,
   },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
   {
     id: "minecraft-classic", title: "Minecraft Classic", cat: "Sandbox",
     tags: ["build", "blocks", "mojang"], type: "embed", src: "https://classic.minecraft.net/",
-    blurb: "The original Minecraft, free from Mojang. Build anything.", icon: "⛏️", color: "#5a9e42", featured: true,
+    blurb: "The original Minecraft, free from Mojang. Build anything.",
+    thumb: "assets/thumbs/minecraft-classic.svg", icon: "⛏️", color: "#5a9e42", featured: true,
   },
   {
     id: "sandspiel", title: "Sandspiel", cat: "Sandbox",
@@ -47,9 +51,15 @@ const CATALOG = [
     blurb: "A mesmerizing falling-sand playground — fire, water, plants, lava.", icon: "🧪", color: "#d97e33", featured: true,
   },
   {
+    id: "hexgl", title: "HexGL", cat: "Arcade",
+    tags: ["racing", "3d", "futuristic", "webgl"], type: "embed", src: "https://hexgl.bkcore.com/play/",
+    blurb: "A gorgeous futuristic hover-racer. Blazing speed.", icon: "🏎️", color: "#22a3c4",
+  },
+  {
     id: "hextris", title: "Hextris", cat: "Puzzle",
     tags: ["tetris", "blocks", "hexagon"], type: "embed", src: "https://hextris.io/",
-    blurb: "Addictive hexagon spin on falling blocks.", icon: "🔷", color: "#d9407a",
+    blurb: "Addictive hexagon spin on falling blocks.",
+    thumb: "assets/thumbs/hextris.svg", icon: "🔷", color: "#d9407a",
   },
   {
     id: "clumsy-bird", title: "Clumsy Bird", cat: "Arcade",
@@ -62,6 +72,11 @@ const CATALOG = [
     blurb: "Tilt a marble through a slick 3D maze.", icon: "🌀", color: "#6a5cff",
   },
   {
+    id: "dino-run", title: "Dino Run", cat: "Arcade",
+    tags: ["runner", "chrome", "t-rex", "endless"], type: "embed", src: "https://wayou.github.io/t-rex-runner/",
+    blurb: "The offline Chrome dino — jump the cacti, chase a high score.", icon: "🦖", color: "#5a6570",
+  },
+  {
     id: "a-dark-room", title: "A Dark Room", cat: "Idle",
     tags: ["text", "adventure", "incremental"], type: "embed", src: "https://adarkroom.doublespeakgames.com/",
     blurb: "A cult-classic minimalist adventure. Stoke the fire…", icon: "🔥", color: "#8a8f98",
@@ -70,6 +85,16 @@ const CATALOG = [
     id: "paperclips", title: "Universal Paperclips", cat: "Idle",
     tags: ["incremental", "clicker", "ai"], type: "embed", src: "https://www.decisionproblem.com/paperclips/",
     blurb: "Turn the whole universe into paperclips. Weirdly gripping.", icon: "📎", color: "#9aa4ad",
+  },
+  {
+    id: "hello-wordl", title: "hello wordl", cat: "Puzzle",
+    tags: ["word", "wordle", "guess"], type: "embed", src: "https://hellowordl.net/",
+    blurb: "Guess the hidden word in six tries. Endless rounds.", icon: "🔤", color: "#6aaa64",
+  },
+  {
+    id: "solitaire", title: "Solitaire", cat: "Puzzle",
+    tags: ["cards", "klondike", "patience"], type: "embed", src: "https://www.solitr.com/",
+    blurb: "Classic Klondike solitaire — the study-hall staple.", icon: "🃏", color: "#2f7d4f",
   },
   {
     id: "untrusted", title: "Untrusted", cat: "Puzzle",
