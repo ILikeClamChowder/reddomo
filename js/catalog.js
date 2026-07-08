@@ -53,7 +53,8 @@ const CATALOG = [
   {
     id: "hexgl", title: "HexGL", cat: "Arcade",
     tags: ["racing", "3d", "futuristic", "webgl"], type: "embed", src: "https://hexgl.bkcore.com/play/",
-    blurb: "A gorgeous futuristic hover-racer. Blazing speed.", icon: "🏎️", color: "#22a3c4",
+    blurb: "A gorgeous futuristic hover-racer. Blazing speed.",
+    thumb: "assets/thumbs/hexgl.png", icon: "🏎️", color: "#22a3c4",
   },
   {
     id: "hextris", title: "Hextris", cat: "Puzzle",

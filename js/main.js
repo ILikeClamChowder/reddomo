@@ -34,6 +34,7 @@
     const art = document.createElement("div");
     art.className = "tile-art";
     if (game.thumb) {
+      art.style.backgroundColor = game.color || "#211812"; // shows behind transparent images
       art.style.backgroundImage = `url("${game.thumb}")`;
     } else {
       art.style.background =
