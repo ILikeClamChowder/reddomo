@@ -41,7 +41,7 @@ const CATALOG = [
     id: "doom", title: "DOOM", cat: "Arcade",
     tags: ["fps", "shooter", "retro", "id software", "classic", "1993"], type: "self",
     blurb: "The 1993 original — Episode 1 shareware, running right in your browser.",
-    icon: "👹", color: "#7a1a12", featured: true,
+    thumb: "assets/thumbs/doom.webp", icon: "👹", color: "#7a1a12", featured: true,
   },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
@@ -66,7 +66,7 @@ const CATALOG = [
     id: "hextris", title: "Hextris", cat: "Puzzle",
     tags: ["tetris", "blocks", "hexagon"], type: "embed", src: "https://hextris.io/",
     blurb: "Addictive hexagon spin on falling blocks.",
-    thumb: "assets/thumbs/hextris.svg", icon: "🔷", color: "#d9407a",
+    thumb: "assets/thumbs/hextris.webp", icon: "🔷", color: "#d9407a",
   },
   {
     id: "clumsy-bird", title: "Clumsy Bird", cat: "Arcade",
@@ -96,7 +96,8 @@ const CATALOG = [
   {
     id: "hello-wordl", title: "hello wordl", cat: "Puzzle",
     tags: ["word", "wordle", "guess"], type: "embed", src: "https://hellowordl.net/",
-    blurb: "Guess the hidden word in six tries. Endless rounds.", icon: "🔤", color: "#6aaa64",
+    blurb: "Guess the hidden word in six tries. Endless rounds.",
+    thumb: "assets/thumbs/hello-wordl.webp", icon: "🔤", color: "#6aaa64",
   },
   {
     id: "solitaire", title: "Solitaire", cat: "Puzzle",
@@ -133,7 +134,8 @@ const CATALOG = [
   {
     id: "cookie-clicker", title: "Cookie Clicker", cat: "Idle",
     tags: ["incremental", "clicker"], type: "link", src: "https://orteil.dashnet.org/cookieclicker/",
-    blurb: "Bake absurd numbers of cookies. Opens on the official site.", icon: "🍪", color: "#b06a3b",
+    blurb: "Bake absurd numbers of cookies. Opens on the official site.",
+    thumb: "assets/thumbs/cookie-clicker.webp", icon: "🍪", color: "#b06a3b",
   },
   {
     id: "qwop", title: "QWOP", cat: "Skill",
