@@ -43,6 +43,16 @@ const CATALOG = [
     blurb: "The 1993 original — Episode 1 shareware, running right in your browser.",
     thumb: "assets/thumbs/doom.webp", icon: "👹", color: "#7a1a12", featured: true,
   },
+  {
+    id: "minesweeper", title: "Minesweeper", cat: "Puzzle",
+    tags: ["classic", "logic", "mines"], type: "self",
+    blurb: "The timeless classic — clear the field without hitting a mine.", icon: "💣", color: "#6a7079",
+  },
+  {
+    id: "breakout", title: "Breakout", cat: "Arcade",
+    tags: ["arcade", "paddle", "bricks", "classic"], type: "self",
+    blurb: "Bounce the ball, smash every brick. Don't drop it!", icon: "🧱", color: "#ff5a4a",
+  },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
   {
@@ -69,9 +79,9 @@ const CATALOG = [
     thumb: "assets/thumbs/hextris.webp", icon: "🔷", color: "#d9407a",
   },
   {
-    id: "clumsy-bird", title: "Clumsy Bird", cat: "Arcade",
-    tags: ["flappy", "reflex"], type: "embed", src: "https://ellisonleao.github.io/clumsy-bird/",
-    blurb: "Flappy done right — tap to flap, dodge the pipes.", icon: "🐤", color: "#e0b52c",
+    id: "flappy-domo", title: "Flappy Domo", cat: "Arcade",
+    tags: ["flappy", "reflex", "bird"], type: "self",
+    blurb: "Flap the little red Domo through the pipes. Just one more try…", icon: "🐤", color: "#5ec6e8",
   },
   {
     id: "astray", title: "Astray", cat: "Arcade",

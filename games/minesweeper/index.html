@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minesweeper</title>
+<style>
+  :root { --bg:#17110f; --panel:#241a15; --hidden:#3a2c24; --hidden2:#463629; --revealed:#221a15; --line:#4a382c; --text:#f6ede8; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family: system-ui, sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:14px; user-select:none; -webkit-tap-highlight-color:transparent; }
+  .wrap { display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .diff { display:flex; gap:8px; }
+  .diff button { font:inherit; font-weight:700; font-size:.85rem; padding:7px 14px; border-radius:999px; cursor:pointer;
+    background:var(--panel); color:var(--text); border:1px solid var(--line); }
+  .diff button.active { background:#e5352c; border-color:#e5352c; color:#fff; }
+  .hud { display:flex; align-items:center; justify-content:space-between; width:100%; background:var(--panel);
+    border:1px solid var(--line); border-radius:12px; padding:8px 14px; }
+  .counter { font-family: ui-monospace, monospace; font-size:1.5rem; font-weight:800; color:#ff5a4a; min-width:60px; }
+  .counter.time { color:#f2b53f; text-align:right; }
+  .face { font-size:1.6rem; background:none; border:none; cursor:pointer; line-height:1; }
+  .board { display:grid; gap:3px; background:var(--line); padding:6px; border-radius:10px; touch-action:manipulation; }
+  .cell { width:30px; height:30px; border-radius:5px; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:1rem; cursor:pointer; background:linear-gradient(180deg,var(--hidden2),var(--hidden)); }
+  .cell:hover { filter:brightness(1.12); }
+  .cell.rev { background:var(--revealed); cursor:default; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+  .cell.mine { background:#e5352c; }
+  .cell.flag, .cell.boom { }
+  .n1{color:#5a9bff}.n2{color:#4ad07d}.n3{color:#ff6f5e}.n4{color:#b98bff}.n5{color:#f2b53f}.n6{color:#3fd0d0}.n7{color:#f4ece9}.n8{color:#b09a92}
+  .msg { font-weight:700; min-height:1.2em; color:var(--text); }
+  .msg.win { color:#4ad07d; } .msg.lose { color:#ff5a4a; }
+  .hint { font-size:.78rem; color:#8a7268; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="diff" id="diff"></div>
+  <div class="hud">
+    <span class="counter" id="mines">010</span>
+    <button class="face" id="face" title="New game">🙂</button>
+    <span class="counter time" id="time">000</span>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="msg" id="msg"></div>
+  <div class="hint">Left-click reveal · Right-click / long-press to flag</div>
+</div>
+<script>
+(function () {
+  const LEVELS = { Easy:[9,9,10], Medium:[16,16,40], Hard:[16,30,99] };
+  let cols, rows, mineCount, grid, revealedCount, flags, started, over, timer, seconds;
+  const boardEl = document.getElementById("board");
+  const minesEl = document.getElementById("mines");
+  const timeEl = document.getElementById("time");
+  const faceEl = document.getElementById("face");
+  const msgEl = document.getElementById("msg");
+  let level = "Easy";
+
+  // difficulty buttons
+  const diffEl = document.getElementById("diff");
+  Object.keys(LEVELS).forEach(k => {
+    const b = document.createElement("button"); b.textContent = k; if (k === level) b.className = "active";
+    b.onclick = () => { level = k; [...diffEl.children].forEach(c => c.classList.toggle("active", c === b)); newGame(); };
+    diffEl.appendChild(b);
+  });
+
+  function pad(n) { return String(Math.max(0, Math.min(999, n))).padStart(3, "0"); }
+
+  function newGame() {
+    [rows, cols, mineCount] = LEVELS[level];
+    grid = []; revealedCount = 0; flags = 0; started = false; over = false; seconds = 0;
+    clearInterval(timer); timeEl.textContent = "000"; minesEl.textContent = pad(mineCount);
+    faceEl.textContent = "🙂"; msgEl.textContent = ""; msgEl.className = "msg";
+    boardEl.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+    boardEl.innerHTML = "";
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const cell = { r, c, mine:false, rev:false, flag:false, n:0, el:document.createElement("div") };
+      cell.el.className = "cell";
+      cell.el.addEventListener("click", () => reveal(cell));
+      cell.el.addEventListener("contextmenu", (e) => { e.preventDefault(); toggleFlag(cell); });
+      // long-press flag for touch
+      let lp; cell.el.addEventListener("touchstart", () => { lp = setTimeout(() => { toggleFlag(cell); lp = null; }, 350); }, {passive:true});
+      cell.el.addEventListener("touchend", (e) => { if (lp) { clearTimeout(lp); } else { e.preventDefault(); } }, {passive:false});
+      grid.push(cell); boardEl.appendChild(cell.el);
+    }
+  }
+  const at = (r, c) => (r < 0 || c < 0 || r >= rows || c >= cols) ? null : grid[r * cols + c];
+  const neighbors = (cell) => { const o = []; for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) if (dr||dc) { const n = at(cell.r+dr, cell.c+dc); if (n) o.push(n); } return o; };
+
+  function placeMines(safe) {
+    const banned = new Set([safe, ...neighbors(safe)].map(x => x.r * cols + x.c));
+    let placed = 0;
+    while (placed < mineCount) {
+      const i = (Math.random() * grid.length) | 0;
+      if (grid[i].mine || banned.has(i)) continue;
+      grid[i].mine = true; placed++;
+    }
+    for (const cell of grid) cell.n = neighbors(cell).filter(n => n.mine).length;
+  }
+
+  function startTimer() { started = true; timer = setInterval(() => { seconds++; timeEl.textContent = pad(seconds); }, 1000); }
+
+  function reveal(cell) {
+    if (over || cell.rev || cell.flag) return;
+    if (!started) { placeMines(cell); startTimer(); }
+    if (cell.mine) { boom(cell); return; }
+    flood(cell);
+    if (revealedCount === grid.length - mineCount) win();
+  }
+  function flood(cell) {
+    const stack = [cell];
+    while (stack.length) {
+      const c = stack.pop();
+      if (c.rev || c.flag) continue;
+      c.rev = true; revealedCount++;
+      c.el.className = "cell rev";
+      if (c.n > 0) { c.el.textContent = c.n; c.el.classList.add("n" + c.n); }
+      else for (const nb of neighbors(c)) if (!nb.rev && !nb.mine) stack.push(nb);
+    }
+  }
+  function toggleFlag(cell) {
+    if (over || cell.rev) return;
+    if (!started) { placeMines(cell); startTimer(); }   // allow flagging first
+    cell.flag = !cell.flag;
+    cell.el.textContent = cell.flag ? "🚩" : "";
+    flags += cell.flag ? 1 : -1;
+    minesEl.textContent = pad(mineCount - flags);
+  }
+  function boom(cell) {
+    over = true; clearInterval(timer); faceEl.textContent = "😵";
+    msgEl.textContent = "Boom! Try again."; msgEl.className = "msg lose";
+    for (const c of grid) {
+      if (c.mine) { c.el.classList.add("rev"); c.el.textContent = "💣"; if (c === cell) c.el.classList.add("mine"); }
+      else if (c.flag && !c.mine) { c.el.textContent = "❌"; }
+    }
+  }
+  function win() {
+    over = true; clearInterval(timer); faceEl.textContent = "😎";
+    msgEl.textContent = "You swept it! 🎉  " + seconds + "s"; msgEl.className = "msg win";
+    for (const c of grid) if (c.mine && !c.flag) { c.el.textContent = "🚩"; }
+    minesEl.textContent = "000";
+  }
+
+  faceEl.onclick = newGame;
+  newGame();
+})();
+</script>
+</body>
+</html>
