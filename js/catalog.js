@@ -53,6 +53,16 @@ const CATALOG = [
     tags: ["arcade", "paddle", "bricks", "classic"], type: "self",
     blurb: "Bounce the ball, smash every brick. Don't drop it!", icon: "🧱", color: "#ff5a4a",
   },
+  {
+    id: "asteroids", title: "Asteroids", cat: "Arcade",
+    tags: ["space", "shooter", "retro", "vector", "classic"], type: "self",
+    blurb: "Rotate, thrust, and blast the rocks in this vector classic.", icon: "🚀", color: "#20203a",
+  },
+  {
+    id: "connect-four", title: "Connect Four", cat: "Multiplayer",
+    tags: ["board", "strategy", "2 player", "classic"], type: "self",
+    blurb: "Drop discs, connect four in a row. Vs a friend or the Domo AI.", icon: "🔴", color: "#2b4c9b",
+  },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
   {
