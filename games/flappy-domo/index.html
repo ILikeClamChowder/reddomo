@@ -12,13 +12,13 @@
 </style>
 </head>
 <body>
-<div id="stage"><canvas id="c" width="420" height="640"></canvas></div>
+<div id="stage"><canvas id="c" width="900" height="560"></canvas></div>
 <script>
 (function () {
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
-  const W = 420, H = 640;
-  const GROUND_H = 90, GROUND_Y = H - GROUND_H;
+  const W = 900, H = 560;
+  const GROUND_H = 74, GROUND_Y = H - GROUND_H;
 
   // ---- tuned feel ----
   const GRAVITY = 1750;        // px/s^2
@@ -26,9 +26,9 @@
   const MAX_FALL = 620;
   const SPEED = 168;           // world scroll speed px/s
   const GAP = 168;             // pipe gap (generous = feels fair)
-  const PIPE_W = 66;
-  const SPACING = 220;         // horizontal distance between pipes
-  const BIRD_X = 128;
+  const PIPE_W = 70;
+  const SPACING = 260;         // horizontal distance between pipes
+  const BIRD_X = 250;
   const BIRD_R = 17;           // forgiving hitbox radius
 
   let state = "ready";         // ready | play | dead
@@ -103,7 +103,7 @@
   function die() { if (state !== "play") return; state = "dead"; deadT = 0; shake = 12; }
 
   // ---- render ----
-  const clouds = [{x:60,y:90,s:1},{x:260,y:150,s:.8},{x:360,y:70,s:1.1},{x:160,y:210,s:.7}];
+  const clouds = [{x:120,y:80,s:1},{x:430,y:150,s:.8},{x:700,y:70,s:1.1},{x:300,y:200,s:.7}];
   function render(now) {
     ctx.save();
     if (shake > 0.4) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake);
