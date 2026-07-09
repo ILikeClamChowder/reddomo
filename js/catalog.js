@@ -129,6 +129,16 @@ const CATALOG = [
     tags: ["typing", "shooter", "space", "words"], type: "embed", src: "https://zty.pe/",
     blurb: "Type the words to blast incoming ships. Fast fingers win.", icon: "⌨️", color: "#2a7de0",
   },
+  {
+    id: "skribbl", title: "Skribbl", cat: "Multiplayer",
+    tags: ["draw", "guess", "party", "online"], type: "embed", src: "https://skribbl.io/",
+    blurb: "Draw and guess with a room full of players. Chaos and giggles.", icon: "🎨", color: "#4a8cf0",
+  },
+  {
+    id: "krunker", title: "Krunker", cat: "Arcade",
+    tags: ["fps", "shooter", "multiplayer", "3d"], type: "embed", src: "https://krunker.io/",
+    blurb: "Fast, blocky browser FPS. Frag your way up the leaderboard.", icon: "🎯", color: "#d94f3a",
+  },
 
   // ---- links (open on the game's official site; they block embedding) ----
   {
