@@ -35,7 +35,7 @@ const CATALOG = [
   {
     id: "2048", title: "2048", cat: "Puzzle", tags: ["numbers", "slide", "brain"], type: "self",
     blurb: "Slide the tiles, chase that 2048.",
-    thumb: "assets/thumbs/2048.svg", icon: "🔢", color: "#e0a92a", featured: true,
+    thumb: "assets/thumbs/2048.webp", icon: "🔢", color: "#e0a92a", featured: true,
   },
   {
     id: "doom", title: "DOOM", cat: "Arcade",
