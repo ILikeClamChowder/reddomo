@@ -113,7 +113,8 @@ const CATALOG = [
   {
     id: "a-dark-room", title: "A Dark Room", cat: "Idle",
     tags: ["text", "adventure", "incremental"], type: "embed", src: "https://adarkroom.doublespeakgames.com/",
-    blurb: "A cult-classic minimalist adventure. Stoke the fire…", icon: "🔥", color: "#8a8f98",
+    blurb: "A cult-classic minimalist adventure. Stoke the fire…",
+    thumb: "assets/thumbs/a-dark-room.png", icon: "🔥", color: "#8a8f98",
   },
   {
     id: "paperclips", title: "Universal Paperclips", cat: "Idle",
@@ -149,22 +150,26 @@ const CATALOG = [
   {
     id: "isleward", title: "Isleward", cat: "Multiplayer",
     tags: ["mmo", "rpg", "roguelike", "online"], type: "embed", src: "https://play.isleward.com/",
-    blurb: "A free browser MMORPG roguelike — level up alongside players worldwide.", icon: "⚔️", color: "#8a4fd0",
+    blurb: "A free browser MMORPG roguelike — level up alongside players worldwide.",
+    thumb: "assets/thumbs/isleward.png", icon: "⚔️", color: "#8a4fd0",
   },
   {
     id: "ztype", title: "ZType", cat: "Arcade",
     tags: ["typing", "shooter", "space", "words"], type: "embed", src: "https://zty.pe/",
-    blurb: "Type the words to blast incoming ships. Fast fingers win.", icon: "⌨️", color: "#2a7de0",
+    blurb: "Type the words to blast incoming ships. Fast fingers win.",
+    thumb: "assets/thumbs/ztype.jpg", icon: "⌨️", color: "#2a7de0",
   },
   {
     id: "skribbl", title: "Skribbl", cat: "Multiplayer",
     tags: ["draw", "guess", "party", "online"], type: "embed", src: "https://skribbl.io/",
-    blurb: "Draw and guess with a room full of players. Chaos and giggles.", icon: "🎨", color: "#4a8cf0",
+    blurb: "Draw and guess with a room full of players. Chaos and giggles.",
+    thumb: "assets/thumbs/skribbl.png", icon: "🎨", color: "#4a8cf0",
   },
   {
     id: "krunker", title: "Krunker", cat: "Arcade",
     tags: ["fps", "shooter", "multiplayer", "3d"], type: "embed", src: "https://krunker.io/",
-    blurb: "Fast, blocky browser FPS. Frag your way up the leaderboard.", icon: "🎯", color: "#d94f3a",
+    blurb: "Fast, blocky browser FPS. Frag your way up the leaderboard.",
+    thumb: "assets/thumbs/krunker.png", icon: "🎯", color: "#d94f3a",
   },
   {
     id: "diep", title: "Diep.io", cat: "Arcade",
@@ -174,22 +179,20 @@ const CATALOG = [
   {
     id: "zombsroyale", title: "ZombsRoyale.io", cat: "Multiplayer",
     tags: ["battle royale", "io", "shooter", "last one standing"], type: "embed", src: "https://zombsroyale.io/",
-    blurb: "2D battle royale — loot, land, and be the last one standing.", icon: "🪂", color: "#2f6b4f",
-  },
-  {
-    id: "bloxd", title: "Bloxd.io", cat: "Sandbox",
-    tags: ["blocks", "multiplayer", "minigames", "build"], type: "embed", src: "https://bloxd.io/",
-    blurb: "A blocky multiplayer world packed with build modes and minigames.", icon: "🧊", color: "#3a8fd0",
+    blurb: "2D battle royale — loot, land, and be the last one standing.",
+    thumb: "assets/thumbs/zombsroyale.jpg", icon: "🪂", color: "#2f6b4f",
   },
   {
     id: "little-alchemy-2", title: "Little Alchemy 2", cat: "Puzzle",
     tags: ["combine", "elements", "discovery", "relaxing"], type: "embed", src: "https://littlealchemy2.com/",
-    blurb: "Combine elements to discover hundreds more. Start with earth, air, fire, water.", icon: "⚗️", color: "#5a1a4a",
+    blurb: "Combine elements to discover hundreds more. Start with earth, air, fire, water.",
+    thumb: "assets/thumbs/little-alchemy-2.jpg", icon: "⚗️", color: "#5a1a4a",
   },
   {
     id: "typeracer", title: "TypeRacer", cat: "Skill",
     tags: ["typing", "racing", "multiplayer", "words"], type: "embed", src: "https://play.typeracer.com/",
-    blurb: "Race other players by typing text passages as fast as you can.", icon: "🏁", color: "#1a4a7a",
+    blurb: "Race other players by typing text passages as fast as you can.",
+    thumb: "assets/thumbs/typeracer.png", icon: "🏁", color: "#1a4a7a",
   },
 
   // ---- links (open on the game's official site; they block embedding) ----
