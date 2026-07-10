@@ -30,12 +30,15 @@
   const W = 900, H = 560;
 
   // ---- physics constants ----
-  const GRAVITY = 1900, MOVE_SPEED = 270, JUMP_V = -680, MAX_FALL = 1400;
+  const GRAVITY = 1900, MOVE_SPEED = 270, JUMP_V = -780, MAX_FALL = 1400;
+  // Max jump height = JUMP_V^2 / (2*GRAVITY) =~ 160px. Every vertical step in the level below
+  // is kept to a 90-115px rise, leaving 45-70px of margin so every jump is comfortably reachable.
   const COYOTE = 0.09, JUMP_BUFFER = 0.09;
   const FALL_LIMIT = 620; // die if you fall this far below your last checkpoint/ground contact
 
   const GROUND_Y = 9600; // player starts near here
-  const TOP_Y = 0;       // goal near here
+  let TOP_Y = 0;         // goal — set precisely once the tower is built
+  const PW = 30, PH = 30;
 
   // ---- level authoring helpers ----
   let platforms, spikes, movers, crumbles, checkpoints, goal;
@@ -45,157 +48,71 @@
   function crumble(x, y, w, h) { crumbles.push({ x, y, w, h, state: "solid", t: 0 }); }
   function cp(x, y) { checkpoints.push({ x, y, r: 26, hit: false }); }
 
+  // Deterministic, hand-bounded tower generator. Every rise is 90-115px against a ~160px max
+  // jump height, so nothing is ever a frame-perfect or impossible jump. Widths/lanes/hazard
+  // pattern vary via fixed (non-random) sequences so the level is identical every run — this is
+  // a "practice and beat your time" game, so a shifting layout would undermine that.
   function buildLevel() {
     platforms = []; spikes = []; movers = []; crumbles = []; checkpoints = [];
 
-    // Floor 0 (9120-9600) — start, learn to move & jump
-    plat(0, 9600, 900, 40);
-    plat(0, 9550, 60, 90); plat(840, 9550, 60, 90); // side walls visual anchor (also solid)
-    plat(360, 9440, 180, 26);
-    plat(620, 9320, 160, 26);
+    plat(0, GROUND_Y, 900, 40);
+    plat(0, GROUND_Y - 50, 60, 90);
+    plat(840, GROUND_Y - 50, 60, 90);
 
-    // Floor 1 (8640-9120) — small gaps
-    plat(80, 9180, 160, 26);
-    plat(340, 9080, 140, 26);
-    plat(600, 8980, 160, 26);
-    plat(760, 8860, 120, 26);
+    let cy = GROUND_Y;
+    // Horizontal position is a cursor relative to the PREVIOUS platform, not an arbitrary lane
+    // list — a full jump only covers ~hangTime*MOVE_SPEED px sideways, so every step's delta is
+    // kept well under that, alternating direction for a zigzag climb without ever overshooting.
+    const hangTime = 2 * (-JUMP_V) / GRAVITY;
+    const maxHorizontal = hangTime * MOVE_SPEED;
+    let curCenterX = 40 + PW / 2;
+    let xDir = 1;
+    function nextX(w, n) {
+      const delta = 60 + (n % 5) * 16; // bounded delta in [60,124], well under ~222px max
+      xDir = -xDir;
+      let nx = curCenterX + xDir * delta - w / 2;
+      nx = Math.max(20, Math.min(900 - 20 - w, nx));
+      curCenterX = nx + w / 2;
+      return nx;
+    }
 
-    // Floor 2 (8160-8640) — first spikes: single spike to hop over
-    plat(560, 8760, 220, 26);
-    spikeRow(660, 8734, 60, 2);
-    plat(240, 8620, 200, 26);
-    plat(60, 8460, 150, 26);
-    cp(135, 8420);
+    const kinds = ["p", "p", "p", "ps", "p", "m", "p", "p", "c", "c", "p", "ps", "p", "m", "p", "p"];
+    let ki = 0, stepsUntilCp = 5, n = 0;
+    const totalRise = GROUND_Y - 300; // leave room for a hand-built final approach below
 
-    // Floor 3 (7680-8160) — narrow platform + spike combo
-    plat(300, 8340, 110, 26);
-    spikeRow(300, 8314, 55, 2);
-    plat(520, 8220, 100, 26);
-    plat(700, 8080, 130, 26);
-    spikeRow(700, 8054, 130, 3);
-    plat(420, 7940, 110, 26);
+    while (GROUND_Y - cy < totalRise) {
+      n++;
+      const kind = kinds[ki % kinds.length]; ki++;
+      const rise = 92 + ((n * 37) % 22);   // deterministic value in [92,113]
+      const w = 100 + ((n * 53) % 36);     // deterministic width in [100,135]
+      cy -= rise;
+      const x = nextX(w, n);
 
-    // Floor 4 (7200-7680) — zigzag climb
-    plat(180, 7820, 130, 26);
-    plat(500, 7700, 120, 26);
-    plat(200, 7560, 120, 26);
-    plat(560, 7440, 130, 26);
-    plat(280, 7300, 130, 26);
-    cp(345, 7260);
+      if (kind === "m") {
+        const range = 80 + (n % 3) * 20;
+        mover(Math.max(20, x - range / 2), cy, Math.min(w, 120), 24, range, 0.85 + (n % 4) * 0.08, (n % 5) * 0.6);
+      } else if (kind === "c") {
+        crumble(x, cy, Math.min(w, 110), 22);
+      } else {
+        plat(x, cy, w, 26);
+        if (kind === "ps") spikeRow(x + w * 0.6, cy - 22, w * 0.32, 2);
+      }
 
-    // Floor 5 (6720-7200) — first moving platform
-    mover(360, 7140, 110, 24, 220, 0.9, 0);
-    plat(60, 7040, 130, 26);
-    plat(700, 7040, 140, 26);
-    mover(400, 6900, 110, 24, 200, 1.0, 1.6);
-    plat(120, 6780, 120, 26);
+      stepsUntilCp--;
+      if (stepsUntilCp <= 0 && kind !== "m" && kind !== "c") {
+        cp(x + Math.min(w, 100) / 2, cy - 40);
+        stepsUntilCp = 5 + (n % 3);
+      }
+    }
 
-    // Floor 6 (6240-6720) — moving platform over spikes
-    plat(60, 6680, 160, 26);
-    spikeRow(260, 6654, 380, 6);
-    mover(300, 6560, 130, 24, 260, 0.8, 0);
-    plat(700, 6440, 150, 26);
-    cp(770, 6400);
-
-    // Floor 7 (5760-6240) — first crumbling platforms
-    plat(700, 6300, 130, 26);
-    crumble(500, 6180, 110, 24);
-    crumble(300, 6060, 110, 24);
-    plat(80, 5960, 140, 26);
-
-    // Floor 8 (5280-5760) — precision jumps over a spike pit
-    plat(80, 5880, 120, 26);
-    spikeRow(240, 5854, 480, 8);
-    plat(260, 5780, 90, 24);
-    plat(440, 5700, 90, 24);
-    plat(620, 5620, 90, 24);
-    plat(760, 5500, 120, 26);
-    cp(820, 5460);
-
-    // Floor 9 (4800-5280) — zigzag narrow platforms
-    plat(600, 5380, 110, 24);
-    plat(360, 5280, 110, 24);
-    plat(600, 5180, 110, 24);
-    plat(340, 5080, 110, 24);
-    plat(560, 4960, 110, 24);
-    plat(280, 4860, 130, 26);
-
-    // Floor 10 (4320-4800) — moving platform timing over spikes
-    plat(140, 4780, 130, 26);
-    spikeRow(300, 4754, 420, 7);
-    mover(420, 4650, 120, 24, 240, 1.1, 0);
-    plat(760, 4520, 120, 26);
-    cp(820, 4480);
-
-    // Floor 11 (3840-4320) — crumble chain across a gap
-    plat(700, 4400, 120, 26);
-    crumble(540, 4320, 100, 22);
-    crumble(390, 4240, 100, 22);
-    crumble(240, 4160, 100, 22);
-    plat(80, 4080, 130, 26);
-
-    // Floor 12 (3360-3840) — narrow shaft, alternating spikes on the walls
-    plat(60, 3960, 140, 26);
-    spikeRow(0, 3860, 40, 2);
-    spikeRow(820, 3780, 40, 2);
-    plat(360, 3800, 90, 24);
-    plat(360, 3620, 90, 24);
-    plat(600, 3460, 120, 26);
-    cp(660, 3420);
-
-    // Floor 13 (2880-3360) — mover -> crumble -> gap combo
-    mover(560, 3340, 120, 24, 220, 0.95, 0.8);
-    crumble(280, 3220, 110, 22);
-    plat(60, 3100, 120, 26);
-    plat(500, 3020, 100, 24);
-    plat(700, 2920, 120, 26);
-
-    // Floor 14 (2400-2880) — tight jump sequence surrounded by spikes
-    plat(700, 2860, 130, 26);
-    spikeRow(160, 2834, 500, 8);
-    plat(160, 2760, 80, 22);
-    plat(320, 2680, 80, 22);
-    plat(480, 2600, 80, 22);
-    plat(640, 2520, 100, 24);
-    cp(690, 2480);
-
-    // Floor 15 (1920-2400) — double movers
-    mover(120, 2380, 110, 24, 200, 0.85, 0);
-    mover(560, 2260, 110, 24, 220, 1.05, 2.4);
-    plat(760, 2140, 120, 26);
-    plat(60, 2040, 130, 26);
-
-    // Floor 16 (1440-1920) — the gauntlet: crumbles over a long spike pit
-    plat(60, 1960, 130, 26);
-    spikeRow(220, 1934, 560, 9);
-    crumble(240, 1860, 100, 22);
-    crumble(400, 1780, 100, 22);
-    crumble(560, 1700, 100, 22);
-    plat(700, 1600, 140, 26);
-    cp(760, 1560);
-
-    // Floor 17 (960-1440) — final precise jumps
-    plat(700, 1520, 110, 26);
-    plat(500, 1420, 80, 22);
-    plat(300, 1330, 80, 22);
-    plat(500, 1240, 80, 22);
-    plat(300, 1150, 80, 22);
-    plat(460, 1040, 110, 24);
-
-    // Floor 18 (480-960) — mover + crumble finale approach
-    mover(320, 940, 120, 24, 240, 1.15, 0);
-    crumble(560, 820, 110, 22);
-    plat(300, 700, 120, 26);
-    spikeRow(420, 674, 300, 5);
-    cp(360, 660);
-
-    // Floor 19 (0-480) — final stretch + goal
-    plat(300, 580, 110, 24);
-    plat(560, 480, 110, 24);
-    plat(360, 380, 140, 26);
-    plat(360, 220, 180, 30);
-    goal = { x: 400, y: 60, w: 100, h: 140 };
-    plat(340, 200, 220, 20);
+    // final approach: three generous, safe, static platforms leading to a wide goal landing
+    cy -= 100; plat(nextX(160, n), cy, 160, 26);
+    cy -= 95; plat(nextX(200, n + 1), cy, 200, 28);
+    cy -= 90;
+    const gx = Math.max(20, Math.min(900 - 20 - 240, curCenterX - 120));
+    plat(gx, cy, 240, 22);
+    TOP_Y = cy;
+    goal = { x: gx + 60, y: cy - 140, w: 100, h: 140 };
   }
 
   buildLevel();
@@ -274,8 +191,6 @@
   function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
   }
-
-  const PW = 30, PH = 30;
 
   function allSolids() {
     const list = platforms.slice();
