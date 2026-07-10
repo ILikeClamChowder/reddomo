@@ -94,7 +94,7 @@
     { name: "Medieval Age", income: 10, upgradeCost: 550,
       melee:  { name:"Knight",     icon:"🐎", cost:130, hp:190, dmg:22, range:38,  speed:75, atkCd:0.75 },
       ranged: { name:"Crossbow",   icon:"🎯", cost:150, hp:85,  dmg:20, range:200, speed:50, atkCd:1.2, proj:"bolt" },
-      special:{ name:"Charge", icon:"🐎", cooldown:26, kind:"summon", count:3 },
+      special:{ name:"Charge", icon:"🐎", cooldown:32, kind:"summon", count:2, hpMult:0.45 },
       turret: { dmg:18, range:220, atkCd:0.75 }, baseColor:"#7a7a8a", baseColor2:"#5c5c6b" },
     { name: "Industrial Age", income: 12, upgradeCost: 1100,
       melee:  { name:"Trooper", icon:"🪖", cost:200, hp:170, dmg:26, range:46,  speed:58, atkCd:0.7 },
@@ -109,7 +109,7 @@
   ];
 
   function newSide(isPlayer) {
-    return { isPlayer, age: 0, money: isPlayer ? 60 : 60, baseHp: MAX_HP, specialCd: 0, turretCd: 0, decisionTimer: 2, saving: false };
+    return { isPlayer, age: 0, money: isPlayer ? 60 : 60, baseHp: MAX_HP, specialCd: 0, turretCd: 0, decisionTimer: 2, evoSave: 0 };
   }
   let player, enemy, units, effects, projectiles, state, elapsed;
 
@@ -137,11 +137,14 @@
     return true;
   }
 
-  function canEvolve(s) { return s.age < AGES.length - 1 && s.money >= AGES[s.age + 1].upgradeCost; }
+  function canEvolve(s) { return s.age < AGES.length - 1 && (s.money + (s.evoSave || 0)) >= AGES[s.age + 1].upgradeCost; }
   function doEvolve(sideName) {
     const s = sideName === "player" ? player : enemy;
     if (!canEvolve(s)) return;
-    s.money -= AGES[s.age + 1].upgradeCost;
+    const cost = AGES[s.age + 1].upgradeCost;
+    const fromSave = Math.min(s.evoSave || 0, cost);
+    s.evoSave = (s.evoSave || 0) - fromSave;
+    s.money -= (cost - fromSave);
     s.age++;
     addEffect({ kind: "evolve", side: sideName, t: 1.2 });
   }
@@ -161,9 +164,12 @@
     } else if (spec.kind === "summon") {
       for (let i = 0; i < spec.count; i++) {
         const age = AGES[s.age];
+        // fast, fragile shock cavalry: full damage/range, but a fraction of normal hp,
+        // so it's a burst of pressure rather than 3 full-price units for free
+        const hp = Math.round(age.melee.hp * (spec.hpMult || 1));
         units.push({ side: sideName, kind: "melee", name: age.melee.name, icon: age.melee.icon,
           x: (sideName === "player" ? P_BASE_X + 30 : E_BASE_X - 30) + i * (sideName === "player" ? 22 : -22),
-          hp: age.melee.hp, maxHp: age.melee.hp, dmg: age.melee.dmg, range: age.melee.range, speed: age.melee.speed + 15,
+          hp, maxHp: hp, dmg: age.melee.dmg, range: age.melee.range, speed: age.melee.speed + 15,
           atkCd: age.melee.atkCd, atkTimer: 0, dir: sideName === "player" ? 1 : -1, state: "move", bob: Math.random()*10, flash: 0.15 });
       }
     } else if (spec.kind === "base") {
@@ -196,7 +202,12 @@
     if (state !== "play") return;
     elapsed += dt;
     player.money += AGES[player.age].income * dt;
-    enemy.money += AGES[enemy.age].income * dt;
+    // split the AI's income: half stays spendable for troops (so it keeps fielding
+    // units), half is quietly reserved toward its next evolution so it can never be
+    // spent away on troops before it adds up
+    const enemyIncome = AGES[enemy.age].income * dt;
+    enemy.money += enemyIncome * 0.5;
+    enemy.evoSave += enemyIncome * 0.5;
     player.specialCd = Math.max(0, player.specialCd - dt);
     enemy.specialCd = Math.max(0, enemy.specialCd - dt);
     player.turretCd = Math.max(0, player.turretCd - dt);
@@ -207,23 +218,11 @@
     if (enemy.decisionTimer <= 0) {
       enemy.decisionTimer = 1.5 + Math.random() * 1.3;
       const age = AGES[enemy.age];
-      const nextUp = AGES[enemy.age + 1];
       if (canEvolve(enemy)) {
-        enemy.saving = false;
         if (Math.random() < 0.9) doEvolve("enemy");
-      } else if (nextUp) {
-        // once committed to saving, mostly stop buying troops so gold actually
-        // compounds toward the next age instead of getting spent every tick
-        if (!enemy.saving && Math.random() < 0.3) enemy.saving = true;
-        if (enemy.saving) {
-          if (Math.random() < 0.08 && enemy.money >= age.melee.cost) spawnUnit("enemy", "melee");
-        } else {
-          const opts = [];
-          if (enemy.money >= age.melee.cost) opts.push("melee");
-          if (enemy.money >= age.ranged.cost) opts.push("ranged");
-          if (opts.length) spawnUnit("enemy", opts[Math.floor(Math.random() * opts.length)]);
-        }
       } else {
+        // evolution gold is reserved separately (see income split above), so it's
+        // always safe to spend freely here and still keep the battlefield populated
         const opts = [];
         if (enemy.money >= age.melee.cost) opts.push("melee");
         if (enemy.money >= age.ranged.cost) opts.push("ranged");
