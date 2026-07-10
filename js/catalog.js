@@ -91,7 +91,8 @@ const CATALOG = [
   {
     id: "flappy-domo", title: "Flappy Domo", cat: "Arcade",
     tags: ["flappy", "reflex", "bird"], type: "self",
-    blurb: "Flap the little red Domo through the pipes. Just one more try…", icon: "🐤", color: "#5ec6e8",
+    blurb: "Flap the little red Domo through the pipes. Just one more try…",
+    thumb: "assets/thumbs/flappy-domo.svg", icon: "🐤", color: "#5ec6e8",
   },
   {
     id: "astray", title: "Astray", cat: "Arcade",
