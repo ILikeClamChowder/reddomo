@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Empire Rush</title>
+<style>
+  html, body { margin:0; height:100%; background:#0a0d12; overflow:hidden; font-family:system-ui,sans-serif; color:#f6ede8; user-select:none; -webkit-tap-highlight-color:transparent; }
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #wrap { width:900px; height:600px; transform-origin:center center; display:flex; flex-direction:column; flex-shrink:0; }
+  canvas { width:900px; height:460px; display:block; }
+
+  #ui { width:900px; height:140px; background:#161016; border-top:2px solid #2c2230; display:flex; align-items:center; padding:0 14px; gap:10px; box-sizing:border-box; }
+  .money { display:flex; flex-direction:column; align-items:center; min-width:76px; }
+  .money .amt { font-size:1.3rem; font-weight:800; color:#ffd86e; }
+  .money .lbl { font-size:.62rem; color:#8a8390; text-transform:uppercase; letter-spacing:.06em; }
+
+  .btn { position:relative; width:88px; height:104px; border-radius:12px; border:2px solid #3a3040; background:#221a26; color:#f6ede8;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; font:inherit; overflow:hidden; flex-shrink:0; }
+  .btn .ic { font-size:1.7rem; line-height:1; }
+  .btn .nm { font-size:.62rem; font-weight:700; text-align:center; padding:0 4px; }
+  .btn .cost { font-size:.72rem; font-weight:800; color:#ffd86e; }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn:not(:disabled):hover { border-color:#5a4a68; background:#2a2030; }
+  .btn:not(:disabled):active { transform:translateY(1px); }
+  .btn.evolve { background:#1a2a22; border-color:#2f5a3f; }
+  .btn.evolve .cost { color:#7be08f; }
+  .btn.special { background:#2a1a1a; border-color:#5a2f2f; }
+  .btn.special .cd { position:absolute; inset:0; background:rgba(10,8,10,.78); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem; }
+  .spacer { flex:1; }
+
+  .overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    background:radial-gradient(80% 80% at 50% 40%, rgba(20,14,10,.75), rgba(8,6,10,.95)); text-align:center; padding:20px; box-sizing:border-box; }
+  .overlay.hidden { display:none; }
+  .title { font-size:clamp(2rem,7vw,3.4rem); font-weight:900; letter-spacing:-.03em; margin:0; line-height:.95;
+    background:linear-gradient(180deg,#ffd86e,#e5a52c); -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 4px 14px rgba(229,165,44,.35)); }
+  .subtitle { color:#b8aeb8; margin:0; max-width:38ch; font-size:1rem; }
+  button.menu { font:inherit; font-weight:800; font-size:1.02rem; cursor:pointer; padding:13px 26px; border-radius:999px; border:none;
+    color:#1a140f; background:linear-gradient(180deg,#ffd86e,#e5a52c); box-shadow:0 10px 24px -8px rgba(229,165,44,.55); }
+  button.menu:hover { filter:brightness(1.08); } button.menu:active { transform:translateY(2px); }
+  .ages-legend { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:4px; font-size:.78rem; color:#9a8fa0; max-width:520px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="wrap">
+    <canvas id="c" width="900" height="460"></canvas>
+    <div id="ui">
+      <div class="money"><span class="amt" id="money-amt">0</span><span class="lbl">Gold</span></div>
+      <button class="btn" id="btn-melee"><span class="ic" id="melee-ic">🪨</span><span class="nm" id="melee-nm">Clubman</span><span class="cost" id="melee-cost">25</span></button>
+      <button class="btn" id="btn-ranged"><span class="ic" id="ranged-ic">🎯</span><span class="nm" id="ranged-nm">Slinger</span><span class="cost" id="ranged-cost">35</span></button>
+      <div class="spacer"></div>
+      <button class="btn evolve" id="btn-evolve"><span class="ic">⬆️</span><span class="nm" id="evolve-nm">Bronze Age</span><span class="cost" id="evolve-cost">220</span></button>
+      <button class="btn special" id="btn-special"><span class="ic" id="special-ic">🪨</span><span class="nm" id="special-nm">Boulder</span><div class="cd hidden" id="special-cd"></div></button>
+    </div>
+  </div>
+
+  <div class="overlay" id="menu">
+    <h1 class="title">Empire Rush</h1>
+    <p class="subtitle">Grow your economy, spawn troops, and evolve through 5 ages to crush the enemy base.</p>
+    <button class="menu" id="btn-start">Start Battle</button>
+    <div class="ages-legend">
+      <span>🪨 Stone</span><span>⚔️ Bronze</span><span>🐎 Medieval</span><span>💣 Industrial</span><span>⚡ Future</span>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <h1 class="title" id="result-title">Victory!</h1>
+    <p class="subtitle" id="result-sub"></p>
+    <button class="menu" id="btn-restart">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+  const W = 900, H = 460;
+  const GROUND_Y = 380;
+  const P_BASE_X = 80, E_BASE_X = 820;
+  const MAX_HP = 1000;
+
+  const AGES = [
+    { name: "Stone Age", income: 6, upgradeCost: 0,
+      melee:  { name:"Clubman", icon:"🪨", cost:25,  hp:60,  dmg:8,  range:34,  speed:55, atkCd:0.9 },
+      ranged: { name:"Slinger", icon:"🎯", cost:35,  hp:35,  dmg:6,  range:150, speed:50, atkCd:1.1 },
+      special:{ name:"Boulder", icon:"🪨", cooldown:22, kind:"lane", dmg:35 },
+      turret: { dmg:5, range:120, atkCd:1.0 }, baseColor:"#7a6a52", baseColor2:"#5c4f3d" },
+    { name: "Bronze Age", income: 8, upgradeCost: 220,
+      melee:  { name:"Swordsman", icon:"⚔️", cost:60,  hp:110, dmg:14, range:36,  speed:58, atkCd:0.85 },
+      ranged: { name:"Archer",    icon:"🏹", cost:75,  hp:55,  dmg:11, range:180, speed:52, atkCd:1.0 },
+      special:{ name:"Volley", icon:"🏹", cooldown:24, kind:"nuke", dmg:30 },
+      turret: { dmg:9, range:140, atkCd:0.9 }, baseColor:"#8a7040", baseColor2:"#6b5730" },
+    { name: "Medieval Age", income: 10, upgradeCost: 550,
+      melee:  { name:"Knight",     icon:"🐎", cost:130, hp:190, dmg:22, range:38,  speed:75, atkCd:0.75 },
+      ranged: { name:"Crossbow",   icon:"🎯", cost:150, hp:85,  dmg:20, range:200, speed:50, atkCd:1.2 },
+      special:{ name:"Charge", icon:"🐎", cooldown:26, kind:"summon", count:3 },
+      turret: { dmg:14, range:160, atkCd:0.8 }, baseColor:"#7a7a8a", baseColor2:"#5c5c6b" },
+    { name: "Industrial Age", income: 12, upgradeCost: 1100,
+      melee:  { name:"Trooper", icon:"🪖", cost:200, hp:170, dmg:26, range:46,  speed:58, atkCd:0.7 },
+      ranged: { name:"Cannon",  icon:"💣", cost:300, hp:220, dmg:50, range:210, speed:36, atkCd:1.5 },
+      special:{ name:"Artillery", icon:"💥", cooldown:28, kind:"base", dmg:140 },
+      turret: { dmg:20, range:180, atkCd:0.7 }, baseColor:"#5a626a", baseColor2:"#40464c" },
+    { name: "Future Age", income: 15, upgradeCost: 2000,
+      melee:  { name:"Mech",  icon:"🤖", cost:420, hp:480, dmg:45, range:48,  speed:60, atkCd:0.65 },
+      ranged: { name:"Laser", icon:"⚡", cost:480, hp:220, dmg:52, range:250, speed:55, atkCd:0.6 },
+      special:{ name:"Orbital", icon:"☄️", cooldown:30, kind:"nuke", dmg:60 },
+      turret: { dmg:30, range:210, atkCd:0.6 }, baseColor:"#3a4a6a", baseColor2:"#28324a" },
+  ];
+
+  function newSide(isPlayer) {
+    return { isPlayer, age: 0, money: isPlayer ? 60 : 60, baseHp: MAX_HP, specialCd: 0, turretCd: 0, decisionTimer: 2 };
+  }
+  let player, enemy, units, effects, state, elapsed;
+
+  function reset() {
+    player = newSide(true); enemy = newSide(false);
+    units = []; effects = [];
+    state = "play"; elapsed = 0;
+    document.getElementById("gameover").classList.add("hidden");
+    updateUI();
+  }
+
+  function spawnUnit(side, kind) {
+    const s = side === "player" ? player : enemy;
+    const age = AGES[s.age];
+    const spec = age[kind];
+    if (s.money < spec.cost) return false;
+    s.money -= spec.cost;
+    units.push({
+      side, kind, name: spec.name, icon: spec.icon,
+      x: side === "player" ? P_BASE_X + 30 : E_BASE_X - 30,
+      hp: spec.hp, maxHp: spec.hp, dmg: spec.dmg, range: spec.range, speed: spec.speed,
+      atkCd: spec.atkCd, atkTimer: 0, dir: side === "player" ? 1 : -1,
+      state: "move", bob: Math.random() * 10, flash: 0,
+    });
+    return true;
+  }
+
+  function canEvolve(s) { return s.age < AGES.length - 1 && s.money >= AGES[s.age + 1].upgradeCost; }
+  function doEvolve(sideName) {
+    const s = sideName === "player" ? player : enemy;
+    if (!canEvolve(s)) return;
+    s.money -= AGES[s.age + 1].upgradeCost;
+    s.age++;
+    addEffect({ kind: "evolve", side: sideName, t: 1.2 });
+  }
+
+  function useSpecial(sideName) {
+    const s = sideName === "player" ? player : enemy;
+    if (s.specialCd > 0) return;
+    const spec = AGES[s.age].special;
+    s.specialCd = spec.cooldown;
+    const dir = sideName === "player" ? 1 : -1;
+    const enemySide = sideName === "player" ? "enemy" : "player";
+    if (spec.kind === "lane") {
+      addEffect({ kind: "lane", side: sideName, x: sideName === "player" ? P_BASE_X : E_BASE_X, dir, dmg: spec.dmg, t: 0, life: 2.8 });
+    } else if (spec.kind === "nuke") {
+      for (const u of units) if (u.side === enemySide) { u.hp -= spec.dmg; u.flash = 0.25; }
+      addEffect({ kind: "nuke", side: sideName, t: 0.7 });
+    } else if (spec.kind === "summon") {
+      for (let i = 0; i < spec.count; i++) {
+        const age = AGES[s.age];
+        units.push({ side: sideName, kind: "melee", name: age.melee.name, icon: age.melee.icon,
+          x: (sideName === "player" ? P_BASE_X + 30 : E_BASE_X - 30) + i * (sideName === "player" ? 22 : -22),
+          hp: age.melee.hp, maxHp: age.melee.hp, dmg: age.melee.dmg, range: age.melee.range, speed: age.melee.speed + 15,
+          atkCd: age.melee.atkCd, atkTimer: 0, dir: sideName === "player" ? 1 : -1, state: "move", bob: Math.random()*10, flash: 0.15 });
+      }
+    } else if (spec.kind === "base") {
+      const es = sideName === "player" ? enemy : player;
+      es.baseHp -= spec.dmg;
+      addEffect({ kind: "shell", side: sideName, t: 0, life: 0.9 });
+    }
+  }
+
+  function addEffect(e) { effects.push(e); }
+
+  function frontEnemy(u) {
+    let best = null, bestD = Infinity;
+    for (const o of units) {
+      if (o.side === u.side) continue;
+      const d = u.dir > 0 ? o.x - u.x : u.x - o.x;
+      if (d >= -6 && d < bestD) { bestD = d; best = o; }
+    }
+    return best ? { unit: best, dist: bestD } : null;
+  }
+
+  function update(dt) {
+    if (state !== "play") return;
+    elapsed += dt;
+    player.money += AGES[player.age].income * dt;
+    enemy.money += AGES[enemy.age].income * dt;
+    player.specialCd = Math.max(0, player.specialCd - dt);
+    enemy.specialCd = Math.max(0, enemy.specialCd - dt);
+    player.turretCd = Math.max(0, player.turretCd - dt);
+    enemy.turretCd = Math.max(0, enemy.turretCd - dt);
+
+    // AI
+    enemy.decisionTimer -= dt;
+    if (enemy.decisionTimer <= 0) {
+      enemy.decisionTimer = 1.9 + Math.random() * 1.7;
+      const age = AGES[enemy.age];
+      if (canEvolve(enemy) && Math.random() < 0.4) {
+        doEvolve("enemy");
+      } else {
+        const opts = [];
+        if (enemy.money >= age.melee.cost) opts.push("melee");
+        if (enemy.money >= age.ranged.cost) opts.push("ranged");
+        if (opts.length) spawnUnit("enemy", opts[Math.floor(Math.random() * opts.length)]);
+      }
+      if (enemy.specialCd <= 0 && Math.random() < 0.35) useSpecial("enemy");
+    }
+
+    // units
+    for (const u of units) {
+      u.flash = Math.max(0, u.flash - dt);
+      u.bob += dt * 6;
+      const fe = frontEnemy(u);
+      const baseX = u.side === "player" ? E_BASE_X : P_BASE_X;
+      const distToBase = u.dir > 0 ? baseX - u.x : u.x - baseX;
+      if (fe && fe.dist <= u.range) {
+        u.state = "fight"; u.target = fe.unit;
+        u.atkTimer -= dt;
+        if (u.atkTimer <= 0) { u.atkTimer = u.atkCd; fe.unit.hp -= u.dmg; fe.unit.flash = 0.15; }
+      } else if (distToBase <= u.range) {
+        u.state = "base"; u.target = null;
+        u.atkTimer -= dt;
+        if (u.atkTimer <= 0) {
+          u.atkTimer = u.atkCd;
+          const s = u.side === "player" ? enemy : player;
+          s.baseHp -= u.dmg;
+        }
+      } else {
+        u.state = "move"; u.target = null;
+        u.x += u.dir * u.speed * dt;
+      }
+    }
+    units = units.filter(u => u.hp > 0);
+
+    // turrets
+    function turretTick(sideName) {
+      const s = sideName === "player" ? player : enemy;
+      const t = AGES[s.age].turret;
+      if (s.turretCd > 0) return;
+      const baseX = sideName === "player" ? P_BASE_X : E_BASE_X;
+      let best = null, bestD = Infinity;
+      for (const u of units) {
+        if (u.side === sideName) continue;
+        const d = Math.abs(u.x - baseX);
+        if (d <= t.range && d < bestD) { bestD = d; best = u; }
+      }
+      if (best) { best.hp -= t.dmg; best.flash = 0.2; s.turretCd = t.atkCd; }
+    }
+    turretTick("player"); turretTick("enemy");
+
+    // lane effects (boulder) damage on contact
+    for (const e of effects) {
+      if (e.kind === "lane") {
+        e.t += dt;
+        e.x += e.dir * 340 * dt;
+        for (const u of units) {
+          if (u.side === e.side || u.hit === e) continue;
+          if (Math.abs(u.x - e.x) < 20) { u.hp -= e.dmg; u.flash = 0.2; u.hit = e; }
+        }
+      } else {
+        e.t += dt;
+      }
+    }
+    effects = effects.filter(e => e.t < (e.life || 1));
+
+    if (enemy.baseHp <= 0) { state = "win"; showResult(true); }
+    else if (player.baseHp <= 0) { state = "lose"; showResult(false); }
+
+    updateUI();
+  }
+
+  function showResult(won) {
+    document.getElementById("gameover").classList.remove("hidden");
+    document.getElementById("result-title").textContent = won ? "Victory!" : "Defeated";
+    document.getElementById("result-title").style.background = won
+      ? "linear-gradient(180deg,#ffd86e,#e5a52c)" : "linear-gradient(180deg,#ff8a7a,#c9362c)";
+    document.getElementById("result-title").style.webkitBackgroundClip = "text";
+    document.getElementById("result-title").style.backgroundClip = "text";
+    document.getElementById("result-sub").textContent = won
+      ? "You reduced the enemy base to rubble. Reigning age: " + AGES[player.age].name
+      : "Your base has fallen. You reached the " + AGES[player.age].name + ".";
+  }
+
+  // ---- UI wiring ----
+  const els = {
+    money: document.getElementById("money-amt"),
+    meleeBtn: document.getElementById("btn-melee"), meleeIc: document.getElementById("melee-ic"),
+    meleeNm: document.getElementById("melee-nm"), meleeCost: document.getElementById("melee-cost"),
+    rangedBtn: document.getElementById("btn-ranged"), rangedIc: document.getElementById("ranged-ic"),
+    rangedNm: document.getElementById("ranged-nm"), rangedCost: document.getElementById("ranged-cost"),
+    evolveBtn: document.getElementById("btn-evolve"), evolveNm: document.getElementById("evolve-nm"), evolveCost: document.getElementById("evolve-cost"),
+    specialBtn: document.getElementById("btn-special"), specialIc: document.getElementById("special-ic"),
+    specialNm: document.getElementById("special-nm"), specialCd: document.getElementById("special-cd"),
+  };
+  function updateUI() {
+    if (!player) return;
+    els.money.textContent = Math.floor(player.money);
+    const age = AGES[player.age];
+    els.meleeIc.textContent = age.melee.icon; els.meleeNm.textContent = age.melee.name; els.meleeCost.textContent = Math.ceil(age.melee.cost);
+    els.rangedIc.textContent = age.ranged.icon; els.rangedNm.textContent = age.ranged.name; els.rangedCost.textContent = Math.ceil(age.ranged.cost);
+    els.meleeBtn.disabled = player.money < age.melee.cost;
+    els.rangedBtn.disabled = player.money < age.ranged.cost;
+    if (player.age < AGES.length - 1) {
+      const next = AGES[player.age + 1];
+      els.evolveNm.textContent = next.name; els.evolveCost.textContent = Math.ceil(next.upgradeCost);
+      els.evolveBtn.disabled = player.money < next.upgradeCost; els.evolveBtn.style.visibility = "visible";
+    } else {
+      els.evolveNm.textContent = "Max Age"; els.evolveCost.textContent = ""; els.evolveBtn.disabled = true;
+    }
+    els.specialIc.textContent = age.special.icon; els.specialNm.textContent = age.special.name;
+    if (player.specialCd > 0) {
+      els.specialCd.classList.remove("hidden");
+      els.specialCd.textContent = Math.ceil(player.specialCd) + "s";
+      els.specialBtn.disabled = true;
+    } else {
+      els.specialCd.classList.add("hidden");
+      els.specialBtn.disabled = false;
+    }
+  }
+
+  document.getElementById("btn-melee").addEventListener("click", () => spawnUnit("player", "melee"));
+  document.getElementById("btn-ranged").addEventListener("click", () => spawnUnit("player", "ranged"));
+  document.getElementById("btn-evolve").addEventListener("click", () => doEvolve("player"));
+  document.getElementById("btn-special").addEventListener("click", () => useSpecial("player"));
+  document.getElementById("btn-start").addEventListener("click", () => { document.getElementById("menu").classList.add("hidden"); reset(); });
+  document.getElementById("btn-restart").addEventListener("click", () => reset());
+
+  // ---- render ----
+  function mix(c1, c2, t) {
+    const a = hex(c1), b = hex(c2);
+    return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
+  }
+  function hex(h) { h = h.replace("#",""); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+
+  function render() {
+    const sky = ctx.createLinearGradient(0,0,0,GROUND_Y);
+    sky.addColorStop(0,"#2a2440"); sky.addColorStop(1,"#4a3f5c");
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,GROUND_Y);
+    ctx.fillStyle = "rgba(255,255,255,.4)";
+    for (let i=0;i<30;i++){ const x=(i*137)%W, y=(i*53)%(GROUND_Y*0.7); ctx.fillRect(x,y,1,1); }
+
+    ctx.fillStyle = "#332a1e"; ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+    ctx.fillStyle = "#4a3d2b"; ctx.fillRect(0,GROUND_Y,W,6);
+
+    if (!player) { requestAnimationFrame(render); return; }
+
+    drawBase(P_BASE_X, player, true);
+    drawBase(E_BASE_X, enemy, false);
+
+    const sorted = units.slice().sort((a,b) => a.x - b.x);
+    for (const u of sorted) drawUnit(u);
+
+    for (const e of effects) drawEffect(e);
+
+    // base HP bars
+    drawBaseBar(20, player, "#57d68d");
+    drawBaseBar(W-220, enemy, "#e05a5a");
+
+    requestAnimationFrame(render);
+  }
+
+  function drawBase(x, s, isPlayer) {
+    const age = AGES[s.age];
+    const w = 78, h = 70 + s.age * 10;
+    const bx = isPlayer ? x - w/2 : x - w/2;
+    ctx.fillStyle = age.baseColor2; ctx.fillRect(bx, GROUND_Y-h, w, h);
+    ctx.fillStyle = age.baseColor; ctx.fillRect(bx, GROUND_Y-h, w, 10);
+    ctx.fillStyle = isPlayer ? "#3a8fd0" : "#d0503a";
+    ctx.fillRect(bx + (isPlayer?w-14:0), GROUND_Y-h-18, 6, 18);
+    ctx.beginPath();
+    if (isPlayer) { ctx.moveTo(bx+w-8,GROUND_Y-h-18); ctx.lineTo(bx+w+14,GROUND_Y-h-12); ctx.lineTo(bx+w-8,GROUND_Y-h-6); }
+    else { ctx.moveTo(bx+6,GROUND_Y-h-18); ctx.lineTo(bx-16,GROUND_Y-h-12); ctx.lineTo(bx+6,GROUND_Y-h-6); }
+    ctx.fill();
+    for (let i=0;i<Math.min(4,1+s.age);i++) {
+      ctx.fillStyle = "rgba(255,220,140,.55)";
+      ctx.fillRect(bx + 8 + i*16, GROUND_Y-h+20, 8, 8);
+    }
+  }
+
+  function drawBaseBar(x, s, color) {
+    const w = 200, h = 14;
+    ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.fillRect(x, 10, w, h);
+    const pct = Math.max(0, s.baseHp / MAX_HP);
+    ctx.fillStyle = color; ctx.fillRect(x, 10, w*pct, h);
+    ctx.strokeStyle = "rgba(255,255,255,.3)"; ctx.strokeRect(x, 10, w, h);
+    ctx.fillStyle = "#fff"; ctx.font = "700 11px system-ui"; ctx.textAlign = "center";
+    ctx.fillText(Math.ceil(s.baseHp) + " / " + MAX_HP, x + w/2, 20);
+    ctx.textAlign = "left"; ctx.font = "700 11px system-ui"; ctx.fillStyle = "rgba(255,255,255,.7)";
+    ctx.fillText(AGES[s.age].name, x, 42);
+  }
+
+  function drawUnit(u) {
+    const y = GROUND_Y + Math.sin(u.bob) * (u.state === "move" ? 2.2 : 0.6);
+    const color = u.side === "player" ? "#3a8fd0" : "#d0503a";
+    const colorDark = u.side === "player" ? "#215d8f" : "#8f3323";
+    ctx.save();
+    ctx.translate(u.x, y);
+    if (u.flash > 0) { ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.globalAlpha = Math.min(1, u.flash*4); ctx.beginPath(); ctx.arc(0,-26,22,0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(0,4,16,4,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = colorDark; ctx.fillRect(-11,-38,22,32);
+    ctx.fillStyle = color; ctx.fillRect(-11,-38,22,10);
+    ctx.beginPath(); ctx.arc(0,-46,10,0,Math.PI*2); ctx.fillStyle = "#e8c9a8"; ctx.fill();
+    ctx.font = "16px system-ui"; ctx.textAlign = "center"; ctx.fillText(u.icon, 0, 2);
+    // hp bar
+    const w = 26;
+    ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(-w/2,-56,w,4);
+    ctx.fillStyle = u.side === "player" ? "#57d68d" : "#e07a5a"; ctx.fillRect(-w/2,-56,w*Math.max(0,u.hp/u.maxHp),4);
+    ctx.restore();
+  }
+
+  function drawEffect(e) {
+    if (e.kind === "lane") {
+      ctx.save(); ctx.translate(e.x, GROUND_Y-14);
+      ctx.fillStyle = "#8a7a5a"; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    } else if (e.kind === "nuke") {
+      ctx.fillStyle = `rgba(255,180,80,${0.4*(1-e.t/0.7)})`; ctx.fillRect(0,0,W,GROUND_Y);
+    } else if (e.kind === "evolve") {
+      const x = e.side === "player" ? P_BASE_X : E_BASE_X;
+      ctx.fillStyle = `rgba(255,216,110,${0.5*(1-e.t/1.2)})`;
+      ctx.beginPath(); ctx.arc(x, GROUND_Y-60, 60*(1+e.t), 0, Math.PI*2); ctx.fill();
+    } else if (e.kind === "shell") {
+      const x = e.side === "player" ? E_BASE_X : P_BASE_X;
+      ctx.fillStyle = `rgba(255,140,60,${0.6*(1-e.t/0.9)})`;
+      ctx.beginPath(); ctx.arc(x, GROUND_Y-40, 50*(1+e.t*0.6), 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // ---- fit-to-viewport scaling ----
+  const wrap = document.getElementById("wrap");
+  function fit() {
+    const s = Math.min(innerWidth / 900, innerHeight / 600);
+    wrap.style.transform = `scale(${s})`;
+  }
+  addEventListener("resize", fit); fit();
+
+  // ---- main loop ----
+  let last = performance.now();
+  function frame(now) {
+    let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05;
+    update(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>

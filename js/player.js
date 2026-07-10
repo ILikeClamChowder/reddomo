@@ -27,7 +27,7 @@
   catEl.textContent = game.cat;
   titleEl.textContent = game.title;
   blurbEl.textContent = game.blurb || "";
-  frame.src = game.type === "embed" ? game.src : `games/${game.id}/index.html?v=21`;
+  frame.src = game.type === "embed" ? game.src : `games/${game.id}/index.html?v=22`;
   if (game.type === "embed") tipEl.textContent = "Loaded from the game's official free site.";
 
   fsBtn.addEventListener("click", () => {

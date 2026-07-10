@@ -64,6 +64,12 @@ const CATALOG = [
     blurb: "Drop discs, connect four in a row. Vs a friend or the Domo AI.", icon: "🔴", color: "#2b4c9b",
   },
   {
+    id: "age-of-war", title: "Empire Rush", cat: "Multiplayer",
+    tags: ["strategy", "base defense", "evolution", "ai", "economy", "tug of war"], type: "self",
+    blurb: "Grow your economy, spawn troops, and evolve through 5 ages to crush the enemy base.",
+    thumb: "assets/thumbs/age-of-war.svg", icon: "🏰", color: "#453a5a", featured: true,
+  },
+  {
     id: "slope", title: "Slope", cat: "Arcade",
     tags: ["3d", "endless", "runner", "reflex", "ball", "precision"], type: "self",
     blurb: "Steer the ball down an endless neon slope. One slip and it's over.",
