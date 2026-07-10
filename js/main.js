@@ -87,6 +87,7 @@
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
   function matches(game) {
+    if (game.hidden) return false;
     if (activeCat !== "All" && game.cat !== activeCat) return false;
     if (!query) return true;
     const hay = (game.title + " " + game.cat + " " + (game.tags || []).join(" ")).toLowerCase();
@@ -100,7 +101,7 @@
     featuredWrap.hidden = !showFeatured;
     if (showFeatured) {
       featuredGrid.innerHTML = "";
-      CATALOG.filter((g) => g.featured).forEach((g) => featuredGrid.appendChild(tile(g, true)));
+      CATALOG.filter((g) => g.featured && !g.hidden).forEach((g) => featuredGrid.appendChild(tile(g, true)));
     }
     allLabel.textContent = showFeatured ? "All games" : (query ? "Results" : activeCat);
     allLabel.hidden = list.length === 0;

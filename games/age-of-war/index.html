@@ -83,27 +83,27 @@
   const AGES = [
     { name: "Stone Age", income: 6, upgradeCost: 0,
       melee:  { name:"Clubman", icon:"🪨", cost:25,  hp:60,  dmg:8,  range:34,  speed:55, atkCd:0.9 },
-      ranged: { name:"Slinger", icon:"🎯", cost:35,  hp:35,  dmg:6,  range:150, speed:50, atkCd:1.1 },
+      ranged: { name:"Slinger", icon:"🎯", cost:35,  hp:35,  dmg:6,  range:150, speed:50, atkCd:1.1, proj:"stone" },
       special:{ name:"Boulder", icon:"🪨", cooldown:22, kind:"lane", dmg:35 },
       turret: { dmg:5, range:120, atkCd:1.0 }, baseColor:"#7a6a52", baseColor2:"#5c4f3d" },
     { name: "Bronze Age", income: 8, upgradeCost: 220,
       melee:  { name:"Swordsman", icon:"⚔️", cost:60,  hp:110, dmg:14, range:36,  speed:58, atkCd:0.85 },
-      ranged: { name:"Archer",    icon:"🏹", cost:75,  hp:55,  dmg:11, range:180, speed:52, atkCd:1.0 },
+      ranged: { name:"Archer",    icon:"🏹", cost:75,  hp:55,  dmg:11, range:180, speed:52, atkCd:1.0, proj:"arrow" },
       special:{ name:"Volley", icon:"🏹", cooldown:24, kind:"nuke", dmg:30 },
       turret: { dmg:9, range:140, atkCd:0.9 }, baseColor:"#8a7040", baseColor2:"#6b5730" },
     { name: "Medieval Age", income: 10, upgradeCost: 550,
       melee:  { name:"Knight",     icon:"🐎", cost:130, hp:190, dmg:22, range:38,  speed:75, atkCd:0.75 },
-      ranged: { name:"Crossbow",   icon:"🎯", cost:150, hp:85,  dmg:20, range:200, speed:50, atkCd:1.2 },
+      ranged: { name:"Crossbow",   icon:"🎯", cost:150, hp:85,  dmg:20, range:200, speed:50, atkCd:1.2, proj:"bolt" },
       special:{ name:"Charge", icon:"🐎", cooldown:26, kind:"summon", count:3 },
       turret: { dmg:14, range:160, atkCd:0.8 }, baseColor:"#7a7a8a", baseColor2:"#5c5c6b" },
     { name: "Industrial Age", income: 12, upgradeCost: 1100,
       melee:  { name:"Trooper", icon:"🪖", cost:200, hp:170, dmg:26, range:46,  speed:58, atkCd:0.7 },
-      ranged: { name:"Cannon",  icon:"💣", cost:300, hp:220, dmg:50, range:210, speed:36, atkCd:1.5 },
+      ranged: { name:"Cannon",  icon:"💣", cost:300, hp:220, dmg:50, range:210, speed:36, atkCd:1.5, proj:"shell" },
       special:{ name:"Artillery", icon:"💥", cooldown:28, kind:"base", dmg:140 },
       turret: { dmg:20, range:180, atkCd:0.7 }, baseColor:"#5a626a", baseColor2:"#40464c" },
     { name: "Future Age", income: 15, upgradeCost: 2000,
       melee:  { name:"Mech",  icon:"🤖", cost:420, hp:480, dmg:45, range:48,  speed:60, atkCd:0.65 },
-      ranged: { name:"Laser", icon:"⚡", cost:480, hp:220, dmg:52, range:250, speed:55, atkCd:0.6 },
+      ranged: { name:"Laser", icon:"⚡", cost:480, hp:220, dmg:52, range:250, speed:55, atkCd:0.6, proj:"laser" },
       special:{ name:"Orbital", icon:"☄️", cooldown:30, kind:"nuke", dmg:60 },
       turret: { dmg:30, range:210, atkCd:0.6 }, baseColor:"#3a4a6a", baseColor2:"#28324a" },
   ];
@@ -111,11 +111,11 @@
   function newSide(isPlayer) {
     return { isPlayer, age: 0, money: isPlayer ? 60 : 60, baseHp: MAX_HP, specialCd: 0, turretCd: 0, decisionTimer: 2 };
   }
-  let player, enemy, units, effects, state, elapsed;
+  let player, enemy, units, effects, projectiles, state, elapsed;
 
   function reset() {
     player = newSide(true); enemy = newSide(false);
-    units = []; effects = [];
+    units = []; effects = []; projectiles = [];
     state = "play"; elapsed = 0;
     document.getElementById("gameover").classList.add("hidden");
     updateUI();
@@ -128,7 +128,7 @@
     if (s.money < spec.cost) return false;
     s.money -= spec.cost;
     units.push({
-      side, kind, name: spec.name, icon: spec.icon,
+      side, kind, name: spec.name, icon: spec.icon, proj: spec.proj,
       x: side === "player" ? P_BASE_X + 30 : E_BASE_X - 30,
       hp: spec.hp, maxHp: spec.hp, dmg: spec.dmg, range: spec.range, speed: spec.speed,
       atkCd: spec.atkCd, atkTimer: 0, dir: side === "player" ? 1 : -1,
@@ -175,6 +175,13 @@
 
   function addEffect(e) { effects.push(e); }
 
+  function spawnProjectile(side, x, y, tx, ty, kind) {
+    const speedMap = { stone:420, arrow:520, bolt:560, shell:300, laser:900, turret:600 };
+    const speed = speedMap[kind] || 480;
+    const dist = Math.max(1, Math.hypot(tx - x, ty - y));
+    projectiles.push({ side, x, y, tx, ty, kind, t: 0, life: dist / speed });
+  }
+
   function frontEnemy(u) {
     let best = null, bestD = Infinity;
     for (const o of units) {
@@ -200,13 +207,19 @@
     if (enemy.decisionTimer <= 0) {
       enemy.decisionTimer = 1.9 + Math.random() * 1.7;
       const age = AGES[enemy.age];
-      if (canEvolve(enemy) && Math.random() < 0.4) {
-        doEvolve("enemy");
+      const nextUp = AGES[enemy.age + 1];
+      if (canEvolve(enemy)) {
+        if (Math.random() < 0.85) doEvolve("enemy");
       } else {
-        const opts = [];
-        if (enemy.money >= age.melee.cost) opts.push("melee");
-        if (enemy.money >= age.ranged.cost) opts.push("ranged");
-        if (opts.length) spawnUnit("enemy", opts[Math.floor(Math.random() * opts.length)]);
+        // once it's most of the way to affording the next age, mostly hold off on
+        // buying troops so the saved gold isn't immediately spent back down to zero
+        const savingHard = nextUp && enemy.money >= nextUp.upgradeCost * 0.55;
+        if (!savingHard || Math.random() < 0.25) {
+          const opts = [];
+          if (enemy.money >= age.melee.cost) opts.push("melee");
+          if (enemy.money >= age.ranged.cost) opts.push("ranged");
+          if (opts.length) spawnUnit("enemy", opts[Math.floor(Math.random() * opts.length)]);
+        }
       }
       if (enemy.specialCd <= 0 && Math.random() < 0.35) useSpecial("enemy");
     }
@@ -221,7 +234,10 @@
       if (fe && fe.dist <= u.range) {
         u.state = "fight"; u.target = fe.unit;
         u.atkTimer -= dt;
-        if (u.atkTimer <= 0) { u.atkTimer = u.atkCd; fe.unit.hp -= u.dmg; fe.unit.flash = 0.15; }
+        if (u.atkTimer <= 0) {
+          u.atkTimer = u.atkCd; fe.unit.hp -= u.dmg; fe.unit.flash = 0.15;
+          if (u.kind === "ranged") spawnProjectile(u.side, u.x + u.dir * 14, GROUND_Y - 30, fe.unit.x, GROUND_Y - 30, u.proj);
+        }
       } else if (distToBase <= u.range) {
         u.state = "base"; u.target = null;
         u.atkTimer -= dt;
@@ -229,6 +245,7 @@
           u.atkTimer = u.atkCd;
           const s = u.side === "player" ? enemy : player;
           s.baseHp -= u.dmg;
+          if (u.kind === "ranged") spawnProjectile(u.side, u.x + u.dir * 14, GROUND_Y - 30, baseX, GROUND_Y - 30, u.proj);
         }
       } else {
         u.state = "move"; u.target = null;
@@ -249,7 +266,10 @@
         const d = Math.abs(u.x - baseX);
         if (d <= t.range && d < bestD) { bestD = d; best = u; }
       }
-      if (best) { best.hp -= t.dmg; best.flash = 0.2; s.turretCd = t.atkCd; }
+      if (best) {
+        best.hp -= t.dmg; best.flash = 0.2; s.turretCd = t.atkCd;
+        spawnProjectile(sideName, baseX, GROUND_Y - 70, best.x, GROUND_Y - 30, "turret");
+      }
     }
     turretTick("player"); turretTick("enemy");
 
@@ -267,6 +287,9 @@
       }
     }
     effects = effects.filter(e => e.t < (e.life || 1));
+
+    for (const p of projectiles) p.t += dt;
+    projectiles = projectiles.filter(p => p.t < p.life);
 
     if (enemy.baseHp <= 0) { state = "win"; showResult(true); }
     else if (player.baseHp <= 0) { state = "lose"; showResult(false); }
@@ -355,6 +378,7 @@
     const sorted = units.slice().sort((a,b) => a.x - b.x);
     for (const u of sorted) drawUnit(u);
 
+    for (const p of projectiles) drawProjectile(p);
     for (const e of effects) drawEffect(e);
 
     // base HP bars
@@ -367,10 +391,12 @@
   function drawBase(x, s, isPlayer) {
     const age = AGES[s.age];
     const w = 78, h = 70 + s.age * 10;
-    const bx = isPlayer ? x - w/2 : x - w/2;
-    ctx.fillStyle = age.baseColor2; ctx.fillRect(bx, GROUND_Y-h, w, h);
-    ctx.fillStyle = age.baseColor; ctx.fillRect(bx, GROUND_Y-h, w, 10);
-    ctx.fillStyle = isPlayer ? "#3a8fd0" : "#d0503a";
+    const bx = x - w/2;
+    const wallColor = isPlayer ? mix(age.baseColor2, "#c0221c", 0.4) : mix(age.baseColor2, "#1c4f78", 0.4);
+    const trimColor = isPlayer ? mix(age.baseColor, "#ff5a4a", 0.4) : mix(age.baseColor, "#3a8fd0", 0.4);
+    ctx.fillStyle = wallColor; ctx.fillRect(bx, GROUND_Y-h, w, h);
+    ctx.fillStyle = trimColor; ctx.fillRect(bx, GROUND_Y-h, w, 10);
+    ctx.fillStyle = isPlayer ? "#ff5a4a" : "#3a8fd0";
     ctx.fillRect(bx + (isPlayer?w-14:0), GROUND_Y-h-18, 6, 18);
     ctx.beginPath();
     if (isPlayer) { ctx.moveTo(bx+w-8,GROUND_Y-h-18); ctx.lineTo(bx+w+14,GROUND_Y-h-12); ctx.lineTo(bx+w-8,GROUND_Y-h-6); }
@@ -394,22 +420,94 @@
     ctx.fillText(AGES[s.age].name, x, 42);
   }
 
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
   function drawUnit(u) {
+    const isMelee = u.kind === "melee";
     const y = GROUND_Y + Math.sin(u.bob) * (u.state === "move" ? 2.2 : 0.6);
-    const color = u.side === "player" ? "#3a8fd0" : "#d0503a";
-    const colorDark = u.side === "player" ? "#215d8f" : "#8f3323";
+    const pal = u.side === "player"
+      ? { body:"#ff5a4a", dark:"#c0221c", trim:"#ffd8cf" }
+      : { body:"#3a8fd0", dark:"#1c4f78", trim:"#cfe9ff" };
+    const bw = isMelee ? 24 : 19, bh = isMelee ? 33 : 30;
     ctx.save();
     ctx.translate(u.x, y);
-    if (u.flash > 0) { ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.globalAlpha = Math.min(1, u.flash*4); ctx.beginPath(); ctx.arc(0,-26,22,0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; }
-    ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(0,4,16,4,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = colorDark; ctx.fillRect(-11,-38,22,32);
-    ctx.fillStyle = color; ctx.fillRect(-11,-38,22,10);
-    ctx.beginPath(); ctx.arc(0,-46,10,0,Math.PI*2); ctx.fillStyle = "#e8c9a8"; ctx.fill();
-    ctx.font = "16px system-ui"; ctx.textAlign = "center"; ctx.fillText(u.icon, 0, 2);
+    if (u.flash > 0) { ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.globalAlpha = Math.min(1, u.flash*4); ctx.beginPath(); ctx.arc(0,-24,20,0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(0,4,15,4,0,0,Math.PI*2); ctx.fill();
+
+    // domo torso
+    ctx.fillStyle = pal.dark; roundRect(-bw/2, -bh-2, bw, bh, 5); ctx.fill();
+    ctx.fillStyle = pal.body; ctx.fillRect(-bw/2+1, -bh-1, bw-2, bh*0.6);
+
+    if (isMelee) {
+      // stubby forward fist bump
+      ctx.fillStyle = pal.dark;
+      ctx.beginPath(); ctx.arc(u.dir*(bw/2+3), -bh*0.45, 4.5, 0, Math.PI*2); ctx.fill();
+    } else {
+      // bright shoulder strap + weapon nub marks the ranged silhouette
+      ctx.fillStyle = pal.trim; ctx.fillRect(-bw/2, -bh*0.6, bw, 3);
+      ctx.fillStyle = pal.dark; ctx.fillRect(u.dir*(bw/2)-2, -bh-6, 4, 10);
+    }
+
+    // domo head: grinning face
+    const hw = 17, hh = 14, hy = -bh-2-hh+3;
+    ctx.fillStyle = pal.dark; roundRect(-hw/2, hy, hw, hh, 3); ctx.fill();
+    ctx.fillStyle = pal.body; ctx.fillRect(-hw/2+1, hy+1, hw-2, hh*0.4);
+    ctx.fillStyle = "#fdf3ec";
+    ctx.beginPath(); ctx.ellipse(-4.2, hy+hh*0.42, 3, 3.6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4.2, hy+hh*0.42, 3, 3.6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#1c0b09";
+    ctx.beginPath(); ctx.arc(-4.2, hy+hh*0.46, 1.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4.2, hy+hh*0.46, 1.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#2a0806"; ctx.fillRect(-5.5, hy+hh*0.68, 11, 3.6);
+    ctx.fillStyle = "#fdf3ec";
+    ctx.beginPath();
+    ctx.moveTo(-5.5, hy+hh*0.68); ctx.lineTo(-2.5, hy+hh*0.98); ctx.lineTo(0, hy+hh*0.68);
+    ctx.lineTo(2.5, hy+hh*0.98); ctx.lineTo(5.5, hy+hh*0.68); ctx.closePath(); ctx.fill();
+
+    // tiny class-icon badge
+    ctx.font = "9px system-ui"; ctx.textAlign = "center";
+    const badgeX = u.dir * (bw/2 * 0.75);
+    ctx.fillStyle = "rgba(20,14,14,.55)";
+    ctx.beginPath(); ctx.arc(badgeX, hy - 4, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillText(u.icon, badgeX, hy - 1);
+
     // hp bar
     const w = 26;
-    ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(-w/2,-56,w,4);
-    ctx.fillStyle = u.side === "player" ? "#57d68d" : "#e07a5a"; ctx.fillRect(-w/2,-56,w*Math.max(0,u.hp/u.maxHp),4);
+    ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(-w/2,-bh-16,w,4);
+    ctx.fillStyle = u.side === "player" ? "#57d68d" : "#e07a5a"; ctx.fillRect(-w/2,-bh-16,w*Math.max(0,u.hp/u.maxHp),4);
+    ctx.restore();
+  }
+
+  function drawProjectile(p) {
+    const k = Math.min(1, p.t / p.life);
+    const x = p.x + (p.tx - p.x) * k, y = p.y + (p.ty - p.y) * k;
+    const ang = Math.atan2(p.ty - p.y, p.tx - p.x);
+    const col = p.side === "player" ? "#ffb199" : "#bfe3ff";
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(ang);
+    if (p.kind === "stone") {
+      ctx.fillStyle = "#8a7a5a"; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+    } else if (p.kind === "arrow" || p.kind === "bolt") {
+      const len = p.kind === "bolt" ? 10 : 15;
+      ctx.strokeStyle = "#d8cdb8"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-len,0); ctx.lineTo(len,0); ctx.stroke();
+      ctx.fillStyle = "#d8cdb8"; ctx.beginPath(); ctx.moveTo(len,0); ctx.lineTo(len-5,-3); ctx.lineTo(len-5,3); ctx.closePath(); ctx.fill();
+    } else if (p.kind === "shell") {
+      ctx.fillStyle = "rgba(255,150,60,.5)"; ctx.beginPath(); ctx.arc(-7,0,4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#2a2420"; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill();
+    } else if (p.kind === "laser") {
+      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.shadowColor = col; ctx.shadowBlur = 9;
+      ctx.beginPath(); ctx.moveTo(-18,0); ctx.lineTo(18,0); ctx.stroke();
+    } else {
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0,0,3.5,0,Math.PI*2); ctx.fill();
+    }
     ctx.restore();
   }
 

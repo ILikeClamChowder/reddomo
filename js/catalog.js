@@ -25,7 +25,7 @@ const CATALOG = [
     id: "rooftop-rumble", title: "Rooftop Rumble", cat: "Multiplayer",
     tags: ["2 player", "fight", "physics", "brawler"], type: "self",
     blurb: "Two-player ragdoll brawl on the rooftops. Grab a friend.",
-    thumb: "assets/thumbs/rooftop-rumble.svg", icon: "🥊", color: "#e23b3b", featured: true,
+    thumb: "assets/thumbs/rooftop-rumble.svg", icon: "🥊", color: "#e23b3b", featured: true, hidden: true,
   },
   {
     id: "snake", title: "Snake", cat: "Arcade", tags: ["classic", "retro"], type: "self",
@@ -73,13 +73,13 @@ const CATALOG = [
     id: "slope", title: "Slope", cat: "Arcade",
     tags: ["3d", "endless", "runner", "reflex", "ball", "precision"], type: "self",
     blurb: "Steer the ball down an endless neon slope. One slip and it's over.",
-    thumb: "assets/thumbs/slope.svg", icon: "🎢", color: "#3a1c6b", featured: true,
+    thumb: "assets/thumbs/slope.svg", icon: "🎢", color: "#3a1c6b", featured: true, hidden: true,
   },
   {
     id: "big-tower-tiny-square", title: "Big Tower Tiny Square", cat: "Skill",
     tags: ["platformer", "climb", "precision", "rage game", "checkpoints"], type: "self",
     blurb: "Climb a brutal tower one tiny jump at a time. Spikes, movers, and crumbling floors await.",
-    thumb: "assets/thumbs/big-tower-tiny-square.svg", icon: "🗼", color: "#4a3a63", featured: true,
+    thumb: "assets/thumbs/big-tower-tiny-square.svg", icon: "🗼", color: "#4a3a63", featured: true, hidden: true,
   },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
