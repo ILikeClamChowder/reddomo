@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+  <defs>
+    <linearGradient id="ssky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#170b2c"/><stop offset="1" stop-color="#3a1c50"/>
+    </linearGradient>
+    <radialGradient id="sball" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#ff8a7a"/><stop offset=".5" stop-color="#ff3d3d"/><stop offset="1" stop-color="#a01818"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="320" fill="url(#ssky)"/>
+  <!-- stars -->
+  <g fill="#ffffff" opacity=".55">
+    <circle cx="40" cy="40" r="1.6"/><circle cx="90" cy="70" r="1.2"/><circle cx="250" cy="50" r="1.6"/>
+    <circle cx="200" cy="90" r="1.2"/><circle cx="280" cy="110" r="1.6"/><circle cx="130" cy="35" r="1.2"/>
+  </g>
+  <rect y="150" width="320" height="170" fill="#0a0512"/>
+  <!-- road -->
+  <polygon points="145,150 175,150 250,320 70,320" fill="#150c22"/>
+  <!-- rumble edges -->
+  <polygon points="145,150 151,150 96,320 70,320" fill="#ff3d6e"/>
+  <polygon points="169,150 175,150 250,320 224,320" fill="#ff3d6e"/>
+  <!-- center dash -->
+  <rect x="158" y="150" width="4" height="24" fill="#5ec6ff"/>
+  <rect x="152" y="200" width="6" height="34" fill="#5ec6ff"/>
+  <rect x="144" y="264" width="8" height="46" fill="#5ec6ff"/>
+  <!-- fog -->
+  <rect y="150" width="320" height="40" fill="#0a0512" opacity=".6"/>
+  <!-- ball -->
+  <g transform="translate(160 246)">
+    <ellipse cx="0" cy="26" rx="28" ry="9" fill="rgba(0,0,0,.35)"/>
+    <circle r="26" fill="url(#sball)"/>
+  </g>
+</svg>

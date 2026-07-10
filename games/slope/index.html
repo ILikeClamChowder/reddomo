@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Slope</title>
+<style>
+  html, body { margin:0; height:100%; background:#05040a; overflow:hidden; font-family:system-ui,sans-serif; color:#f6ede8; user-select:none; -webkit-tap-highlight-color:transparent; }
+  #stage { position:fixed; inset:0; display:grid; place-items:center; }
+  canvas { width:100%; height:100%; object-fit:contain; display:block; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" width="900" height="560"></canvas></div>
+<script>
+(function () {
+  const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+  const W = 900, H = 560;
+
+  // ---- pseudo-3D road constants ----
+  const SEG_LEN = 200;
+  const ROAD_HALF = 900;
+  const RUMBLE = 3;
+  const CAM_HEIGHT = 1100;
+  const CAM_DEPTH = 0.78;
+  const DRAW_N = 160;
+  const N_SEG = 1400;
+
+  const SPEED_START = 600, SPEED_MAX = 2500, SPEED_ACCEL = 16;
+  const STEER_ACCEL = 3.2, STEER_DAMP = 3.0, CENTRIFUGAL = 0.06;
+
+  let track = [];
+
+  function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+  function buildTrack() {
+    track = [];
+    let curve = 0, y = 0;
+    function push(len, curveTarget, yTarget) {
+      const startCurve = curve, startY = y;
+      for (let i = 0; i < len; i++) {
+        const t = i/len;
+        track.push({ curve: startCurve + (curveTarget-startCurve)*easeInOut(t), y: startY + (yTarget-startY)*easeInOut(t) });
+      }
+      curve = curveTarget; y = yTarget;
+    }
+
+    push(60, 0, 0);
+    push(40, 4, 0);
+    push(50, 4, 0);
+    push(40, 0, 500);
+    push(50, -5, 500);
+    push(50, -5, 0);
+    push(40, 0, 0);
+    push(70, 0, 0);
+    push(30, 6, 0);
+    push(50, 6, -420);
+    push(40, 0, -420);
+    push(50, 0, 0);
+    push(60, 3, 700);
+    push(50, 3, 700);
+    push(50, -3, 700);
+    push(50, -3, 0);
+    push(40, 0, 0);
+    push(30, -6, 0);
+    push(50, -6, 350);
+    push(40, 0, 0);
+    push(70, 0, 0);
+    push(40, 5, 0);
+    push(50, 5, -550);
+    push(40, 0, -550);
+    push(60, 0, 0);
+    push(40, 2, 0);
+    push(40, -2, 0);
+    push(60, 0, 800);
+    push(60, 0, 0);
+    push(30, -4, 0);
+    push(50, -4, -300);
+    push(40, 0, 0);
+    push(80, 0, 0);
+
+    while (track.length < N_SEG) track.push({ curve: 0, y: 0 });
+    track.length = N_SEG;
+
+    track[0].obstacle = null;
+    let i = 55;
+    while (i < N_SEG - 25) {
+      i += 24 + (Math.random()*28|0);
+      if (i >= N_SEG - 25) break;
+      if (Math.random() < 0.32) {
+        const span = 4 + (Math.random()*3|0);
+        const width = 0.55 + Math.random()*0.5;
+        const side = Math.random() < 0.5 ? -1 : 1;
+        const from = side < 0 ? -1 : (1-width);
+        for (let k=0; k<span && i+k<N_SEG; k++) track[i+k].gap = { from, to: from+width };
+        i += span;
+      } else {
+        const span = 3 + (Math.random()*2|0);
+        const width = 0.45 + Math.random()*0.4;
+        const from = -1 + Math.random()*(2-width);
+        for (let k=0; k<span && i+k<N_SEG; k++) track[i+k].obstacle = { from, to: from+width };
+        i += span;
+      }
+    }
+  }
+
+  function segAt(z) { return track[((Math.floor(z/SEG_LEN) % N_SEG) + N_SEG) % N_SEG]; }
+
+  // ---- game state ----
+  let state = "ready";
+  let playerZ, playerX, playerVX, speed, dist, best, bump;
+  best = Number(localStorage.getItem("slope_best") || 0);
+
+  const keys = {};
+  addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (["arrowleft","arrowright","a","d"," "].includes(k)) e.preventDefault();
+    if ((state === "ready" || state === "over") && (k === " " || k === "enter")) start();
+    keys[k] = true;
+  });
+  addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+
+  let touchDir = 0;
+  canvas.addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (state === "ready" || state === "over") { start(); return; }
+    const t = e.touches[0], rect = canvas.getBoundingClientRect();
+    touchDir = (t.clientX - rect.left) < rect.width/2 ? -1 : 1;
+  }, {passive:false});
+  canvas.addEventListener("touchmove", e => {
+    e.preventDefault();
+    const t = e.touches[0], rect = canvas.getBoundingClientRect();
+    touchDir = (t.clientX - rect.left) < rect.width/2 ? -1 : 1;
+  }, {passive:false});
+  canvas.addEventListener("touchend", () => { touchDir = 0; });
+
+  function start() {
+    buildTrack();
+    playerZ = 0; playerX = 0; playerVX = 0; speed = SPEED_START; dist = 0; bump = 0;
+    state = "play";
+  }
+
+  function die() {
+    state = "over";
+    const sc = Math.floor(dist/25);
+    if (sc > best) { best = sc; localStorage.setItem("slope_best", best); }
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    let dt = (now-last)/1000; last = now; if (dt > 0.033) dt = 0.033;
+    if (state === "play") update(dt);
+    render(now);
+    requestAnimationFrame(frame);
+  }
+
+  function update(dt) {
+    speed = Math.min(SPEED_MAX, speed + SPEED_ACCEL*dt);
+    let input = 0;
+    if (keys["arrowleft"] || keys["a"]) input -= 1;
+    if (keys["arrowright"] || keys["d"]) input += 1;
+    if (touchDir) input = touchDir;
+
+    const seg = segAt(playerZ);
+    const speedPct = speed / SPEED_MAX;
+
+    playerVX += input*STEER_ACCEL*dt;
+    playerVX -= seg.curve*speedPct*CENTRIFUGAL*dt;
+    playerVX *= Math.max(0, 1 - STEER_DAMP*dt);
+    playerX += playerVX*dt;
+
+    playerZ += speed*dt;
+    dist += speed*dt;
+    bump = Math.max(0, bump - dt*3);
+
+    if (playerX < -1.08 || playerX > 1.08) return die();
+    if (seg.gap && playerX > seg.gap.from && playerX < seg.gap.to) return die();
+    if (seg.obstacle && playerX > seg.obstacle.from && playerX < seg.obstacle.to) return die();
+  }
+
+  function render(now) {
+    const horizon = H*0.5;
+    const sky = ctx.createLinearGradient(0,0,0,horizon);
+    const t = state === "play" ? Math.min(1, dist/40000) : 0;
+    sky.addColorStop(0, mix("#0c0620","#1a0f30",t));
+    sky.addColorStop(1, mix("#2a1440","#3a1c50",t));
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,horizon);
+    ctx.fillStyle = "rgba(255,255,255,.55)";
+    for (let i=0;i<50;i++){ const x=(i*173+((now*0.01)%W))%W, y=(i*97)%horizon; ctx.fillRect(x,y,(i%6===0)?2:1,(i%6===0)?2:1); }
+    ctx.fillStyle = "#0a0512"; ctx.fillRect(0,horizon,W,H-horizon);
+
+    if (state === "ready") { drawBall(W/2, H*0.74, now, 0); drawBanner("SLOPE", "← → or A D to steer", "Space / tap to start"); return; }
+
+    const baseSegIndex = Math.floor(playerZ/SEG_LEN);
+    const baseRem = playerZ - baseSegIndex*SEG_LEN;
+    const camHeightNow = CAM_HEIGHT + segAt(playerZ).y;
+    const cameraX = playerX*ROAD_HALF;
+
+    let x = 0, dx = 0;
+    const rows = [];
+    for (let n = 0; n < DRAW_N; n++) {
+      const idx = baseSegIndex + n;
+      const seg = track[((idx%N_SEG)+N_SEG)%N_SEG];
+      const nextSeg = track[(((idx+1)%N_SEG)+N_SEG)%N_SEG];
+      const z1 = Math.max(1, n*SEG_LEN - baseRem);
+      const z2 = z1 + SEG_LEN;
+      const scale1 = CAM_DEPTH/z1, scale2 = CAM_DEPTH/z2;
+
+      const sx1 = W/2 + scale1*(x - cameraX)*(W/2);
+      const sx2 = W/2 + scale2*(x+dx - cameraX)*(W/2);
+      const sy1 = H/2 - scale1*(seg.y - camHeightNow)*(H/2);
+      const sy2 = H/2 - scale2*(nextSeg.y - camHeightNow)*(H/2);
+      const sw1 = scale1*ROAD_HALF*(W/2);
+      const sw2 = scale2*ROAD_HALF*(W/2);
+
+      rows.push({ idx, seg, sx1, sy1, sw1, sx2, sy2, sw2, fog: Math.pow(n/DRAW_N, 2.2) });
+
+      x += dx; dx += seg.curve*0.9;
+    }
+
+    for (let n = rows.length-1; n >= 0; n--) {
+      const r = rows[n];
+      if (r.sy1 <= r.sy2) continue;
+      const dark = Math.floor(r.idx/RUMBLE) % 2 === 0;
+
+      ctx.fillStyle = dark ? "#140a24" : "#190f2c";
+      ctx.fillRect(0, r.sy2, W, r.sy1-r.sy2+1);
+
+      poly(r.sx1-r.sw1*1.14, r.sy1, r.sx1+r.sw1*1.14, r.sy1, r.sx2+r.sw2*1.14, r.sy2, r.sx2-r.sw2*1.14, r.sy2,
+        dark ? "#ff3d6e" : "#f4f0ff");
+      poly(r.sx1-r.sw1, r.sy1, r.sx1+r.sw1, r.sy1, r.sx2+r.sw2, r.sy2, r.sx2-r.sw2, r.sy2,
+        dark ? "#150c22" : "#1b1030");
+
+      if (r.idx % (RUMBLE*2) < RUMBLE) {
+        poly(r.sx1-r.sw1*0.02, r.sy1, r.sx1+r.sw1*0.02, r.sy1, r.sx2+r.sw2*0.02, r.sy2, r.sx2-r.sw2*0.02, r.sy2, "#5ec6ff");
+      }
+
+      if (r.seg.gap) {
+        const a1=r.sx1+r.seg.gap.from*r.sw1, b1=r.sx1+r.seg.gap.to*r.sw1;
+        const a2=r.sx2+r.seg.gap.from*r.sw2, b2=r.sx2+r.seg.gap.to*r.sw2;
+        poly(a1,r.sy1,b1,r.sy1,b2,r.sy2,a2,r.sy2, "#03020a");
+      }
+      if (r.seg.obstacle) {
+        const a1=r.sx1+r.seg.obstacle.from*r.sw1, b1=r.sx1+r.seg.obstacle.to*r.sw1;
+        const hgt = r.sw1*0.85;
+        ctx.fillStyle = "rgba(255,40,70,.35)";
+        ctx.fillRect(Math.min(a1,b1), r.sy1-hgt-6, Math.abs(b1-a1), 8);
+        poly(a1,r.sy1,b1,r.sy1,b1,r.sy1-hgt,a1,r.sy1-hgt, "#ff2b4a");
+        ctx.fillStyle = "rgba(255,255,255,.25)";
+        ctx.fillRect(Math.min(a1,b1), r.sy1-hgt, Math.abs(b1-a1), Math.max(2,hgt*0.08));
+      }
+
+      if (r.fog > 0.02) { ctx.fillStyle = `rgba(10,5,18,${Math.min(0.92,r.fog)})`; ctx.fillRect(0, r.sy2, W, r.sy1-r.sy2+1); }
+    }
+
+    const fogG = ctx.createLinearGradient(0,horizon-70,0,horizon+40);
+    fogG.addColorStop(0,"rgba(10,5,18,0)"); fogG.addColorStop(1,"rgba(10,5,18,.9)");
+    ctx.fillStyle = fogG; ctx.fillRect(0,horizon-70,W,110);
+
+    drawBall(W/2, H*0.76, now, playerVX);
+
+    ctx.textAlign = "left"; ctx.fillStyle = "#f6ede8"; ctx.font = "700 18px system-ui";
+    ctx.fillText("SCORE " + Math.floor(dist/25), 18, 32);
+    ctx.textAlign = "right"; ctx.fillText("BEST " + best, W-18, 32);
+
+    if (state === "over") banner("Wipeout!", "Score " + Math.floor(dist/25) + " · Best " + best, "Space / tap to try again");
+  }
+
+  function poly(x1,y1,x2,y2,x3,y3,x4,y4,color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.lineTo(x4,y4); ctx.closePath(); ctx.fill();
+  }
+
+  function drawBall(x, y, now, vx) {
+    const tilt = Math.max(-0.5, Math.min(0.5, vx*0.35));
+    const spin = (now*0.006 + (state==="play"? dist*0.02:0));
+    ctx.save();
+    ctx.translate(x + tilt*30, y + Math.sin(now/180)*2);
+    ctx.rotate(tilt*0.4);
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(0,20,22,7,0,0,Math.PI*2); ctx.fill();
+    const g = ctx.createRadialGradient(-6,-8,3,0,0,22);
+    g.addColorStop(0,"#ff8a7a"); g.addColorStop(0.5,"#ff3d3d"); g.addColorStop(1,"#a01818");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 2;
+    for (let i=0;i<3;i++) { ctx.beginPath(); ctx.arc(0,0,20, spin+i*2.1, spin+i*2.1+0.9); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function mix(c1, c2, t) {
+    const a = hex(c1), b = hex(c2);
+    const r = Math.round(a[0]+(b[0]-a[0])*t), g = Math.round(a[1]+(b[1]-a[1])*t), bl = Math.round(a[2]+(b[2]-a[2])*t);
+    return `rgb(${r},${g},${bl})`;
+  }
+  function hex(h) { h = h.replace("#",""); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+
+  function drawBanner(title, sub, sub2) { banner(title, sub, sub2); }
+  function banner(title, sub, sub2) {
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff"; ctx.font = "900 52px system-ui"; ctx.fillText(title, W/2, H/2-20);
+    ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.font = "600 18px system-ui"; ctx.fillText(sub, W/2, H/2+16);
+    if (sub2) { ctx.fillStyle = "rgba(255,255,255,.65)"; ctx.font = "600 16px system-ui"; ctx.fillText(sub2, W/2, H/2+44); }
+  }
+
+  buildTrack();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

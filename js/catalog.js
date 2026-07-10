@@ -63,6 +63,12 @@ const CATALOG = [
     tags: ["board", "strategy", "2 player", "classic"], type: "self",
     blurb: "Drop discs, connect four in a row. Vs a friend or the Domo AI.", icon: "🔴", color: "#2b4c9b",
   },
+  {
+    id: "slope", title: "Slope", cat: "Arcade",
+    tags: ["3d", "endless", "runner", "reflex", "ball", "precision"], type: "self",
+    blurb: "Steer the ball down an endless neon slope. One slip and it's over.",
+    thumb: "assets/thumbs/slope.svg", icon: "🎢", color: "#3a1c6b", featured: true,
+  },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
   {
