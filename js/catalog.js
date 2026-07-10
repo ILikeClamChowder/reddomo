@@ -69,6 +69,12 @@ const CATALOG = [
     blurb: "Steer the ball down an endless neon slope. One slip and it's over.",
     thumb: "assets/thumbs/slope.svg", icon: "🎢", color: "#3a1c6b", featured: true,
   },
+  {
+    id: "big-tower-tiny-square", title: "Big Tower Tiny Square", cat: "Skill",
+    tags: ["platformer", "climb", "precision", "rage game", "checkpoints"], type: "self",
+    blurb: "Climb a brutal tower one tiny jump at a time. Spikes, movers, and crumbling floors await.",
+    thumb: "assets/thumbs/big-tower-tiny-square.svg", icon: "🗼", color: "#4a3a63", featured: true,
+  },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
   {

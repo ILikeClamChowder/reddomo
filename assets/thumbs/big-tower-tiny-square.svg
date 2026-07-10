@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+  <defs>
+    <linearGradient id="btsky" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#2c1c16"/>
+      <stop offset="0.45" stop-color="#4676aa"/>
+      <stop offset="0.75" stop-color="#96bee1"/>
+      <stop offset="1" stop-color="#0a081a"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" fill="url(#btsky)"/>
+  <!-- stars near the top -->
+  <g fill="#ffffff" opacity=".8">
+    <circle cx="40" cy="30" r="1.6"/><circle cx="90" cy="18" r="1.2"/><circle cx="260" cy="26" r="1.6"/>
+    <circle cx="220" cy="50" r="1.2"/><circle cx="150" cy="14" r="1.4"/>
+  </g>
+  <!-- clouds mid zone -->
+  <g fill="rgba(255,255,255,.55)">
+    <ellipse cx="60" cy="140" rx="34" ry="10"/>
+    <ellipse cx="255" cy="110" rx="30" ry="9"/>
+  </g>
+  <!-- tower side walls -->
+  <rect x="0" y="0" width="14" height="320" fill="rgba(0,0,0,.35)"/>
+  <rect x="306" y="0" width="14" height="320" fill="rgba(0,0,0,.35)"/>
+  <!-- platforms -->
+  <g>
+    <rect x="20" y="250" width="90" height="16" rx="3" fill="#4a3a63"/>
+    <rect x="20" y="250" width="90" height="5" rx="2" fill="#6a5590"/>
+    <rect x="150" y="200" width="80" height="16" rx="3" fill="#4a3a63"/>
+    <rect x="150" y="200" width="80" height="5" rx="2" fill="#6a5590"/>
+    <rect x="60" y="140" width="70" height="16" rx="3" fill="#4a3a63"/>
+    <rect x="60" y="140" width="70" height="5" rx="2" fill="#6a5590"/>
+    <rect x="190" y="80" width="90" height="16" rx="3" fill="#4a3a63"/>
+    <rect x="190" y="80" width="90" height="5" rx="2" fill="#6a5590"/>
+  </g>
+  <!-- spikes -->
+  <g fill="#e8e2f0">
+    <polygon points="118,266 128,246 138,266"/>
+    <polygon points="138,266 148,246 158,266"/>
+  </g>
+  <!-- checkpoint flag -->
+  <g>
+    <rect x="248" y="150" width="4" height="52" fill="rgba(0,0,0,.3)"/>
+    <polygon points="252,150 280,160 252,170" fill="#57d68d"/>
+  </g>
+  <!-- tiny square character -->
+  <g transform="translate(95 190)">
+    <ellipse cx="0" cy="26" rx="15" ry="4" fill="rgba(0,0,0,.3)"/>
+    <rect x="-16" y="-16" width="32" height="32" rx="7" fill="#ff6a5a"/>
+    <rect x="-16" y="-16" width="32" height="9" rx="7" fill="#ff9a86"/>
+    <circle cx="5" cy="-2" r="4.2" fill="#fdf3ec"/>
+    <circle cx="6.4" cy="-2" r="1.8" fill="#1c0b09"/>
+  </g>
+</svg>

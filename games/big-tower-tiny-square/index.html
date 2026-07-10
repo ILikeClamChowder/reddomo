@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Big Tower Tiny Square</title>
+<style>
+  html, body { margin:0; height:100%; background:#0a0a12; overflow:hidden; font-family:system-ui,sans-serif; color:#f6ede8; user-select:none; -webkit-tap-highlight-color:transparent; }
+  #stage { position:fixed; inset:0; display:grid; place-items:center; }
+  canvas { width:100%; height:100%; object-fit:contain; display:block; }
+  #touch { position:fixed; inset:0; display:none; pointer-events:none; }
+  #touch button {
+    position:absolute; bottom:22px; width:64px; height:64px; border-radius:50%; border:2px solid rgba(255,255,255,.5);
+    background:rgba(20,16,28,.55); color:#fff; font-size:26px; pointer-events:auto; -webkit-tap-highlight-color:transparent;
+  }
+  #btn-left { left:18px; } #btn-right { left:92px; } #btn-jump { right:22px; bottom:26px; width:78px; height:78px; }
+  @media (pointer: coarse) { #touch { display:block; } }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" width="900" height="560"></canvas></div>
+<div id="touch">
+  <button id="btn-left">◀</button>
+  <button id="btn-right">▶</button>
+  <button id="btn-jump">▲</button>
+</div>
+<script>
+(function () {
+  const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+  const W = 900, H = 560;
+
+  // ---- physics constants ----
+  const GRAVITY = 1900, MOVE_SPEED = 270, JUMP_V = -680, MAX_FALL = 1400;
+  const COYOTE = 0.09, JUMP_BUFFER = 0.09;
+  const FALL_LIMIT = 620; // die if you fall this far below your last checkpoint/ground contact
+
+  const GROUND_Y = 9600; // player starts near here
+  const TOP_Y = 0;       // goal near here
+
+  // ---- level authoring helpers ----
+  let platforms, spikes, movers, crumbles, checkpoints, goal;
+  function plat(x, y, w, h) { platforms.push({ x, y, w, h }); }
+  function spikeRow(x, y, w, n) { const sw = w / n; for (let i = 0; i < n; i++) spikes.push({ x: x + i * sw, y, w: sw, h: 22 }); }
+  function mover(x0, y, w, h, range, speed, phase) { movers.push({ x0, y, w, h, range, speed, phase: phase || 0, x: x0, prevX: x0 }); }
+  function crumble(x, y, w, h) { crumbles.push({ x, y, w, h, state: "solid", t: 0 }); }
+  function cp(x, y) { checkpoints.push({ x, y, r: 26, hit: false }); }
+
+  function buildLevel() {
+    platforms = []; spikes = []; movers = []; crumbles = []; checkpoints = [];
+
+    // Floor 0 (9120-9600) — start, learn to move & jump
+    plat(0, 9600, 900, 40);
+    plat(0, 9550, 60, 90); plat(840, 9550, 60, 90); // side walls visual anchor (also solid)
+    plat(360, 9440, 180, 26);
+    plat(620, 9320, 160, 26);
+
+    // Floor 1 (8640-9120) — small gaps
+    plat(80, 9180, 160, 26);
+    plat(340, 9080, 140, 26);
+    plat(600, 8980, 160, 26);
+    plat(760, 8860, 120, 26);
+
+    // Floor 2 (8160-8640) — first spikes: single spike to hop over
+    plat(560, 8760, 220, 26);
+    spikeRow(660, 8734, 60, 2);
+    plat(240, 8620, 200, 26);
+    plat(60, 8460, 150, 26);
+    cp(135, 8420);
+
+    // Floor 3 (7680-8160) — narrow platform + spike combo
+    plat(300, 8340, 110, 26);
+    spikeRow(300, 8314, 55, 2);
+    plat(520, 8220, 100, 26);
+    plat(700, 8080, 130, 26);
+    spikeRow(700, 8054, 130, 3);
+    plat(420, 7940, 110, 26);
+
+    // Floor 4 (7200-7680) — zigzag climb
+    plat(180, 7820, 130, 26);
+    plat(500, 7700, 120, 26);
+    plat(200, 7560, 120, 26);
+    plat(560, 7440, 130, 26);
+    plat(280, 7300, 130, 26);
+    cp(345, 7260);
+
+    // Floor 5 (6720-7200) — first moving platform
+    mover(360, 7140, 110, 24, 220, 0.9, 0);
+    plat(60, 7040, 130, 26);
+    plat(700, 7040, 140, 26);
+    mover(400, 6900, 110, 24, 200, 1.0, 1.6);
+    plat(120, 6780, 120, 26);
+
+    // Floor 6 (6240-6720) — moving platform over spikes
+    plat(60, 6680, 160, 26);
+    spikeRow(260, 6654, 380, 6);
+    mover(300, 6560, 130, 24, 260, 0.8, 0);
+    plat(700, 6440, 150, 26);
+    cp(770, 6400);
+
+    // Floor 7 (5760-6240) — first crumbling platforms
+    plat(700, 6300, 130, 26);
+    crumble(500, 6180, 110, 24);
+    crumble(300, 6060, 110, 24);
+    plat(80, 5960, 140, 26);
+
+    // Floor 8 (5280-5760) — precision jumps over a spike pit
+    plat(80, 5880, 120, 26);
+    spikeRow(240, 5854, 480, 8);
+    plat(260, 5780, 90, 24);
+    plat(440, 5700, 90, 24);
+    plat(620, 5620, 90, 24);
+    plat(760, 5500, 120, 26);
+    cp(820, 5460);
+
+    // Floor 9 (4800-5280) — zigzag narrow platforms
+    plat(600, 5380, 110, 24);
+    plat(360, 5280, 110, 24);
+    plat(600, 5180, 110, 24);
+    plat(340, 5080, 110, 24);
+    plat(560, 4960, 110, 24);
+    plat(280, 4860, 130, 26);
+
+    // Floor 10 (4320-4800) — moving platform timing over spikes
+    plat(140, 4780, 130, 26);
+    spikeRow(300, 4754, 420, 7);
+    mover(420, 4650, 120, 24, 240, 1.1, 0);
+    plat(760, 4520, 120, 26);
+    cp(820, 4480);
+
+    // Floor 11 (3840-4320) — crumble chain across a gap
+    plat(700, 4400, 120, 26);
+    crumble(540, 4320, 100, 22);
+    crumble(390, 4240, 100, 22);
+    crumble(240, 4160, 100, 22);
+    plat(80, 4080, 130, 26);
+
+    // Floor 12 (3360-3840) — narrow shaft, alternating spikes on the walls
+    plat(60, 3960, 140, 26);
+    spikeRow(0, 3860, 40, 2);
+    spikeRow(820, 3780, 40, 2);
+    plat(360, 3800, 90, 24);
+    plat(360, 3620, 90, 24);
+    plat(600, 3460, 120, 26);
+    cp(660, 3420);
+
+    // Floor 13 (2880-3360) — mover -> crumble -> gap combo
+    mover(560, 3340, 120, 24, 220, 0.95, 0.8);
+    crumble(280, 3220, 110, 22);
+    plat(60, 3100, 120, 26);
+    plat(500, 3020, 100, 24);
+    plat(700, 2920, 120, 26);
+
+    // Floor 14 (2400-2880) — tight jump sequence surrounded by spikes
+    plat(700, 2860, 130, 26);
+    spikeRow(160, 2834, 500, 8);
+    plat(160, 2760, 80, 22);
+    plat(320, 2680, 80, 22);
+    plat(480, 2600, 80, 22);
+    plat(640, 2520, 100, 24);
+    cp(690, 2480);
+
+    // Floor 15 (1920-2400) — double movers
+    mover(120, 2380, 110, 24, 200, 0.85, 0);
+    mover(560, 2260, 110, 24, 220, 1.05, 2.4);
+    plat(760, 2140, 120, 26);
+    plat(60, 2040, 130, 26);
+
+    // Floor 16 (1440-1920) — the gauntlet: crumbles over a long spike pit
+    plat(60, 1960, 130, 26);
+    spikeRow(220, 1934, 560, 9);
+    crumble(240, 1860, 100, 22);
+    crumble(400, 1780, 100, 22);
+    crumble(560, 1700, 100, 22);
+    plat(700, 1600, 140, 26);
+    cp(760, 1560);
+
+    // Floor 17 (960-1440) — final precise jumps
+    plat(700, 1520, 110, 26);
+    plat(500, 1420, 80, 22);
+    plat(300, 1330, 80, 22);
+    plat(500, 1240, 80, 22);
+    plat(300, 1150, 80, 22);
+    plat(460, 1040, 110, 24);
+
+    // Floor 18 (480-960) — mover + crumble finale approach
+    mover(320, 940, 120, 24, 240, 1.15, 0);
+    crumble(560, 820, 110, 22);
+    plat(300, 700, 120, 26);
+    spikeRow(420, 674, 300, 5);
+    cp(360, 660);
+
+    // Floor 19 (0-480) — final stretch + goal
+    plat(300, 580, 110, 24);
+    plat(560, 480, 110, 24);
+    plat(360, 380, 140, 26);
+    plat(360, 220, 180, 30);
+    goal = { x: 400, y: 60, w: 100, h: 140 };
+    plat(340, 200, 220, 20);
+  }
+
+  buildLevel();
+
+  // ---- player & game state ----
+  let px, py, pvx, pvy, onGround, groundedMover, coyoteT, jumpBufT;
+  let respawnX, respawnY, respawnCpIndex;
+  let state = "play"; // play | dead | win
+  let elapsed = 0, startedTiming = false;
+  let bestPct = Number(localStorage.getItem("bigtower_best_pct") || 0);
+  let bestTime = Number(localStorage.getItem("bigtower_best_time") || 0);
+  let toast = "", toastT = 0;
+  let particles = [];
+  let shake = 0;
+  let deadTimer = 0;
+
+  function pctOf(y) { return Math.max(0, Math.min(100, ((GROUND_Y - y) / (GROUND_Y - TOP_Y)) * 100)); }
+
+  function resetPlayer() {
+    px = 40; py = GROUND_Y - 80; pvx = 0; pvy = 0; onGround = false;
+    respawnX = px; respawnY = py; respawnCpIndex = -1;
+    coyoteT = 0; jumpBufT = 0;
+    elapsed = 0; startedTiming = false;
+    state = "play";
+    for (const c of checkpoints) c.hit = false;
+    for (const cr of crumbles) { cr.state = "solid"; cr.t = 0; }
+  }
+
+  function respawn() {
+    px = respawnX; py = respawnY - 30; pvx = 0; pvy = 0;
+    shake = 0.25;
+  }
+
+  function die() { if (state !== "play") return; state = "dead"; shake = 0.35; deadTimer = 0.55; }
+
+  function win() {
+    if (state !== "play") return;
+    state = "win";
+    const pct = 100;
+    if (pct > bestPct) { bestPct = pct; localStorage.setItem("bigtower_best_pct", "100"); }
+    if (bestTime === 0 || elapsed < bestTime) { bestTime = elapsed; localStorage.setItem("bigtower_best_time", String(elapsed)); }
+    burst(px + 15, py + 15, 26, "255,210,90");
+  }
+
+  function burst(x, y, n, color) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 220;
+      particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 100, life: 0.6 + Math.random() * 0.5, max: 1.1, c: color });
+    }
+  }
+
+  // ---- input ----
+  const keys = {};
+  addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (["arrowleft","arrowright","arrowup"," ","a","d","w"].includes(k)) e.preventDefault();
+    if (k === " " || k === "arrowup" || k === "w") jumpBufT = JUMP_BUFFER;
+    keys[k] = true;
+  });
+  addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+
+  function touchBtn(id, key) {
+    const el = document.getElementById(id);
+    const on = e => { e.preventDefault(); keys[key] = true; if (key === "jump") jumpBufT = JUMP_BUFFER; };
+    const off = e => { e.preventDefault(); keys[key] = false; };
+    el.addEventListener("touchstart", on, { passive: false });
+    el.addEventListener("touchend", off, { passive: false });
+    el.addEventListener("touchcancel", off, { passive: false });
+  }
+  touchBtn("btn-left", "left"); touchBtn("btn-right", "right"); touchBtn("btn-jump", "jump");
+
+  function inputLeft() { return keys["arrowleft"] || keys["a"] || keys["left"]; }
+  function inputRight() { return keys["arrowright"] || keys["d"] || keys["right"]; }
+
+  // ---- collision ----
+  function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+  }
+
+  const PW = 30, PH = 30;
+
+  function allSolids() {
+    const list = platforms.slice();
+    for (const m of movers) list.push(m);
+    for (const c of crumbles) if (c.state === "solid" || c.state === "crumbling") list.push(c);
+    return list;
+  }
+
+  function update(dt) {
+    if (state === "dead") {
+      deadTimer -= dt;
+      if (deadTimer <= 0) { respawn(); state = "play"; }
+      updateEnvironment(dt);
+      return;
+    }
+    if (state !== "play") { updateEnvironment(dt); return; }
+    startedTiming = true;
+    elapsed += dt;
+
+    if (inputLeft() && !inputRight()) pvx = -MOVE_SPEED;
+    else if (inputRight() && !inputLeft()) pvx = MOVE_SPEED;
+    else pvx = 0;
+
+    pvy = Math.min(MAX_FALL, pvy + GRAVITY * dt);
+
+    coyoteT = onGround ? COYOTE : Math.max(0, coyoteT - dt);
+    jumpBufT = Math.max(0, jumpBufT - dt);
+    if (jumpBufT > 0 && coyoteT > 0) {
+      pvy = JUMP_V; jumpBufT = 0; coyoteT = 0; onGround = false; groundedMover = null;
+      burst(px + PW/2, py + PH, 8, "255,255,255");
+    }
+
+    const solids = allSolids();
+
+    // horizontal move + resolve
+    px += pvx * dt;
+    px = Math.max(4, Math.min(W - PW - 4, px));
+    for (const s of solids) {
+      if (rectsOverlap(px, py, PW, PH, s.x, s.y, s.w, s.h)) {
+        if (pvx > 0) px = s.x - PW; else if (pvx < 0) px = s.x + s.w;
+      }
+    }
+
+    // vertical move + resolve
+    onGround = false;
+    let ridingDelta = 0;
+    if (groundedMover) { ridingDelta = groundedMover.x - groundedMover.prevX; }
+    px += ridingDelta;
+    py += pvy * dt;
+    groundedMover = null;
+    for (const s of solids) {
+      if (rectsOverlap(px, py, PW, PH, s.x, s.y, s.w, s.h)) {
+        if (pvy > 0) { py = s.y - PH; pvy = 0; onGround = true; if (movers.includes(s)) groundedMover = s; if (crumbles.includes(s)) triggerCrumble(s); }
+        else if (pvy < 0) { py = s.y + s.h; pvy = 0; }
+      }
+    }
+
+    // spikes
+    const m = 6; // forgiving margin
+    for (const sp of spikes) {
+      if (rectsOverlap(px+m, py+m, PW-2*m, PH-2*m, sp.x, sp.y, sp.w, sp.h)) { die(); break; }
+    }
+
+    // checkpoints
+    for (let i = 0; i < checkpoints.length; i++) {
+      const c = checkpoints[i];
+      if (!c.hit && Math.hypot((px+PW/2)-c.x, (py+PH/2)-c.y) < c.r + 14) {
+        c.hit = true; respawnX = c.x - PW/2; respawnY = c.y; respawnCpIndex = i;
+        toast = "Checkpoint!"; toastT = 1.4;
+        burst(c.x, c.y, 16, "120,230,150");
+      }
+    }
+
+    // goal
+    if (goal && rectsOverlap(px, py, PW, PH, goal.x, goal.y, goal.w, goal.h)) win();
+
+    // fell too far
+    if (py > respawnY + FALL_LIMIT || py > GROUND_Y + 200) die();
+
+    updateEnvironment(dt);
+  }
+
+  function triggerCrumble(c) {
+    if (c.state === "solid" && c.t === 0) c.t = 0.001;
+  }
+
+  function updateEnvironment(dt) {
+    for (const mv of movers) {
+      mv.prevX = mv.x;
+      mv.x = mv.x0 + Math.sin(performance.now()/1000 * mv.speed + mv.phase) * mv.range;
+    }
+    for (const c of crumbles) {
+      if (c.state === "solid") {
+        if (c.t > 0) { c.t += dt; if (c.t > 0.45) { c.state = "gone"; c.t = 0; } }
+      } else if (c.state === "gone") {
+        c.t += dt; if (c.t > 2.2) { c.state = "solid"; c.t = 0; }
+      }
+    }
+    for (const p of particles) { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 500*dt; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
+    if (toastT > 0) toastT -= dt;
+    shake = Math.max(0, shake - dt*1.6);
+  }
+
+  // ---- render ----
+  let last = performance.now();
+  function frame(now) {
+    let dt = (now-last)/1000; last = now; if (dt > 0.033) dt = 0.033;
+    update(dt);
+    render(now);
+    requestAnimationFrame(frame);
+  }
+
+  function mix(c1, c2, t) {
+    t = Math.max(0, Math.min(1, t));
+    const r = Math.round(c1[0]+(c2[0]-c1[0])*t), g = Math.round(c1[1]+(c2[1]-c1[1])*t), b = Math.round(c1[2]+(c2[2]-c1[2])*t);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function render(now) {
+    const camY = py - H*0.55;
+    const t = pctOf(py) / 100; // 0 ground .. 1 top
+
+    const skyBottom = [40,26,20], skyMid1=[70,110,170], skyMid2=[150,190,225], skyTop=[10,8,26];
+    let bg;
+    if (t < 0.25) bg = mix(skyBottom, skyMid1, t/0.25);
+    else if (t < 0.6) bg = mix(skyMid1, skyMid2, (t-0.25)/0.35);
+    else bg = mix(skyMid2, skyTop, (t-0.6)/0.4);
+
+    ctx.save();
+    if (shake > 0) ctx.translate((Math.random()-0.5)*shake*14, (Math.random()-0.5)*shake*14);
+
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+    // stars fade in near the top
+    if (t > 0.55) {
+      ctx.fillStyle = `rgba(255,255,255,${Math.min(1,(t-0.55)/0.3)*0.8})`;
+      for (let i=0;i<60;i++){ const x=(i*173)%W, y=(i*97+ (camY*0.05))%H; ctx.fillRect(x,y,(i%7===0)?2:1,(i%7===0)?2:1); }
+    }
+    // clouds mid-zone
+    if (t > 0.2 && t < 0.75) {
+      ctx.fillStyle = `rgba(255,255,255,${0.5*(1-Math.abs(t-0.45)/0.4)})`;
+      for (let i=0;i<6;i++){
+        const cy = ((i*777 - camY*0.3) % 2400 + 2400) % 2400 - 400;
+        const cx = (i*331) % W;
+        ctx.beginPath(); ctx.ellipse(cx, cy, 60, 18, 0, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    function sy(worldY) { return worldY - camY; }
+
+    // side walls
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    ctx.fillRect(0, 0, 8, H); ctx.fillRect(W-8, 0, 8, H);
+
+    // platforms
+    for (const p of platforms) {
+      const y = sy(p.y); if (y > H+40 || y < -60) continue;
+      drawPlat(p.x, y, p.w, p.h, "#4a3a63", "#6a5590");
+    }
+    // movers
+    for (const m of movers) {
+      const y = sy(m.y); if (y > H+40 || y < -60) continue;
+      drawPlat(m.x, y, m.w, m.h, "#2a6b8a", "#48a7d0");
+    }
+    // crumbles
+    for (const c of crumbles) {
+      const y = sy(c.y); if (y > H+40 || y < -60) continue;
+      if (c.state === "gone") continue;
+      const shakeX = c.t > 0 ? (Math.random()-0.5)*4*Math.min(1,c.t*3) : 0;
+      ctx.globalAlpha = c.t > 0 ? Math.max(0.25, 1 - c.t*2) : 1;
+      drawPlat(c.x+shakeX, y, c.w, c.h, "#6b3a2a", "#c47a4a");
+      ctx.globalAlpha = 1;
+    }
+    // spikes
+    ctx.fillStyle = "#e8e2f0";
+    for (const s of spikes) {
+      const y = sy(s.y); if (y > H+40 || y < -60) continue;
+      const n = Math.max(1, Math.round(s.w/18));
+      const sw = s.w/n;
+      for (let i=0;i<n;i++) {
+        ctx.beginPath();
+        ctx.moveTo(s.x+i*sw, y+s.h);
+        ctx.lineTo(s.x+i*sw+sw/2, y);
+        ctx.lineTo(s.x+i*sw+sw, y+s.h);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    // checkpoints
+    for (const c of checkpoints) {
+      const y = sy(c.y); if (y > H+60 || y < -80) continue;
+      ctx.strokeStyle = "rgba(0,0,0,.3)"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(c.x, y+24); ctx.lineTo(c.x, y-40); ctx.stroke();
+      ctx.fillStyle = c.hit ? "#57d68d" : "#8a8fa0";
+      ctx.beginPath(); ctx.moveTo(c.x, y-40); ctx.lineTo(c.x+34, y-30); ctx.lineTo(c.x, y-20); ctx.closePath(); ctx.fill();
+    }
+    // goal
+    if (goal) {
+      const y = sy(goal.y);
+      if (y < H+80 && y > -160) {
+        const g = ctx.createRadialGradient(goal.x+goal.w/2, y+goal.h/2, 5, goal.x+goal.w/2, y+goal.h/2, 90);
+        g.addColorStop(0, "rgba(255,220,110,.9)"); g.addColorStop(1, "rgba(255,220,110,0)");
+        ctx.fillStyle = g; ctx.fillRect(goal.x-60, y-60, goal.w+120, goal.h+120);
+        ctx.fillStyle = "#ffd86e";
+        ctx.fillRect(goal.x+goal.w/2-4, y, 8, goal.h);
+        ctx.beginPath(); ctx.moveTo(goal.x+goal.w/2+4, y+6); ctx.lineTo(goal.x+goal.w/2+46, y+22); ctx.lineTo(goal.x+goal.w/2+4, y+38); ctx.closePath(); ctx.fill();
+      }
+    }
+
+    // particles
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life/p.max);
+      ctx.fillStyle = `rgb(${p.c})`;
+      ctx.fillRect(sy ? p.x-2 : 0, sy(p.y)-2, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+
+    // player
+    if (state !== "win" || true) drawPlayer(sy(py));
+
+    ctx.restore();
+
+    // HUD
+    const pct = pctOf(py);
+    ctx.textAlign = "left"; ctx.fillStyle = "#f6ede8"; ctx.font = "700 20px system-ui";
+    ctx.fillText(pct.toFixed(1) + "%", 18, 34);
+    ctx.font = "600 13px system-ui"; ctx.fillStyle = "rgba(255,255,255,.65)";
+    ctx.fillText("Best " + bestPct.toFixed(0) + "%" + (bestTime ? "  ·  Best time " + fmtTime(bestTime) : ""), 18, 54);
+    ctx.textAlign = "right";
+    ctx.font = "700 20px system-ui"; ctx.fillStyle = "#f6ede8";
+    ctx.fillText(fmtTime(elapsed), W-18, 34);
+
+    if (toastT > 0) {
+      ctx.textAlign = "center"; ctx.globalAlpha = Math.min(1, toastT);
+      ctx.fillStyle = "#57d68d"; ctx.font = "800 22px system-ui";
+      ctx.fillText(toast, W/2, 80);
+      ctx.globalAlpha = 1;
+    }
+
+    if (state === "win") {
+      ctx.fillStyle = "rgba(10,8,18,.6)"; ctx.fillRect(0,0,W,H);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#fff"; ctx.font = "900 48px system-ui"; ctx.fillText("You reached the top!", W/2, H/2-30);
+      ctx.font = "600 18px system-ui"; ctx.fillStyle="rgba(255,255,255,.85)";
+      ctx.fillText("Time: " + fmtTime(elapsed) + "  ·  Best: " + fmtTime(bestTime), W/2, H/2+8);
+      ctx.font = "600 15px system-ui"; ctx.fillStyle="rgba(255,255,255,.6)";
+      ctx.fillText("Space / tap to climb again", W/2, H/2+38);
+    }
+  }
+
+  function fmtTime(s) { const m = Math.floor(s/60), sec = (s%60).toFixed(1).padStart(4,"0"); return m+":"+sec; }
+
+  function drawPlat(x, y, w, h, dark, light) {
+    ctx.fillStyle = dark; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = light; ctx.fillRect(x, y, w, Math.max(4, h*0.28));
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(x, y+h-4, w, 4);
+  }
+
+  function drawPlayer(y) {
+    ctx.save();
+    ctx.translate(px+PW/2, y+PH/2);
+    const lean = Math.max(-0.25, Math.min(0.25, pvx/MOVE_SPEED*0.22));
+    ctx.rotate(lean);
+    ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(0, PH/2+4, PW*0.42, 5, 0,0,Math.PI*2); ctx.fill();
+    const g = ctx.createLinearGradient(-PW/2,-PH/2,PW/2,PH/2);
+    g.addColorStop(0, "#ff6a5a"); g.addColorStop(1, "#d92a2a");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.roundRect(-PW/2, -PH/2, PW, PH, 7); ctx.fill();
+    ctx.fillStyle = "#fdf3ec";
+    const dir = pvx < -5 ? -1 : (pvx > 5 ? 1 : (window.__lastDir||1));
+    window.__lastDir = dir;
+    ctx.beginPath(); ctx.arc(dir*4, -3, 4.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#1c0b09"; ctx.beginPath(); ctx.arc(dir*4+dir*1.6, -3, 2, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  resetPlayer();
+  requestAnimationFrame(frame);
+
+  addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if ((state === "win") && (k === " " || k === "enter")) resetPlayer();
+  });
+  document.getElementById("btn-jump").addEventListener("touchstart", () => { if (state === "win") resetPlayer(); });
+})();
+</script>
+</body>
+</html>
