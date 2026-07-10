@@ -166,6 +166,31 @@ const CATALOG = [
     tags: ["fps", "shooter", "multiplayer", "3d"], type: "embed", src: "https://krunker.io/",
     blurb: "Fast, blocky browser FPS. Frag your way up the leaderboard.", icon: "🎯", color: "#d94f3a",
   },
+  {
+    id: "diep", title: "Diep.io", cat: "Arcade",
+    tags: ["io", "tanks", "shooter", "multiplayer", "upgrade"], type: "embed", src: "https://diep.io/",
+    blurb: "Upgrade your tank, farm shapes, and take down the leaderboard.", icon: "🔺", color: "#4a7a3a",
+  },
+  {
+    id: "zombsroyale", title: "ZombsRoyale.io", cat: "Multiplayer",
+    tags: ["battle royale", "io", "shooter", "last one standing"], type: "embed", src: "https://zombsroyale.io/",
+    blurb: "2D battle royale — loot, land, and be the last one standing.", icon: "🪂", color: "#2f6b4f",
+  },
+  {
+    id: "bloxd", title: "Bloxd.io", cat: "Sandbox",
+    tags: ["blocks", "multiplayer", "minigames", "build"], type: "embed", src: "https://bloxd.io/",
+    blurb: "A blocky multiplayer world packed with build modes and minigames.", icon: "🧊", color: "#3a8fd0",
+  },
+  {
+    id: "little-alchemy-2", title: "Little Alchemy 2", cat: "Puzzle",
+    tags: ["combine", "elements", "discovery", "relaxing"], type: "embed", src: "https://littlealchemy2.com/",
+    blurb: "Combine elements to discover hundreds more. Start with earth, air, fire, water.", icon: "⚗️", color: "#5a1a4a",
+  },
+  {
+    id: "typeracer", title: "TypeRacer", cat: "Skill",
+    tags: ["typing", "racing", "multiplayer", "words"], type: "embed", src: "https://play.typeracer.com/",
+    blurb: "Race other players by typing text passages as fast as you can.", icon: "🏁", color: "#1a4a7a",
+  },
 
   // ---- links (open on the game's official site; they block embedding) ----
   {
