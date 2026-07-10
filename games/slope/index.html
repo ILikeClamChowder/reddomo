@@ -26,7 +26,7 @@
   const DRAW_N = 110;
 
   const N_SEG = 1400;
-  const SPEED_START = 950, SPEED_MAX = 2600, SPEED_ACCEL = 20;
+  const SPEED_START = 950, SPEED_MAX = 2800, SPEED_ACCEL = 62;
   const STEER_ACCEL = 3.2, STEER_DAMP = 3.0, CENTRIFUGAL = 0.05;
 
   let track = [];
@@ -130,8 +130,13 @@
     if (state === "ready" || state === "over") { start(); return; }
     pointerDown = true; touchDir = dirFromClientX(e.clientX);
   });
-  addEventListener("mousemove", e => { if (pointerDown) touchDir = dirFromClientX(e.clientX); });
+  addEventListener("mousemove", e => {
+    if (!pointerDown) return;
+    if (e.buttons !== 1) { pointerDown = false; touchDir = 0; return; } // button released outside our frame
+    touchDir = dirFromClientX(e.clientX);
+  });
   addEventListener("mouseup", () => { pointerDown = false; touchDir = 0; });
+  addEventListener("blur", () => { pointerDown = false; touchDir = 0; });
   canvas.addEventListener("touchstart", e => {
     e.preventDefault();
     if (state === "ready" || state === "over") { start(); return; }
@@ -166,7 +171,7 @@
     let input = 0;
     if (keys["arrowleft"] || keys["a"]) input -= 1;
     if (keys["arrowright"] || keys["d"]) input += 1;
-    if (touchDir) input = touchDir;
+    if (input === 0 && touchDir) input = touchDir;
 
     const seg = segAt(playerZ);
     const speedPct = speed / SPEED_MAX;
