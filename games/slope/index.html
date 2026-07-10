@@ -7,7 +7,7 @@
 <style>
   html, body { margin:0; height:100%; background:#05040a; overflow:hidden; font-family:system-ui,sans-serif; color:#f6ede8; user-select:none; -webkit-tap-highlight-color:transparent; }
   #stage { position:fixed; inset:0; display:grid; place-items:center; }
-  canvas { width:100%; height:100%; object-fit:contain; display:block; }
+  canvas { width:100%; height:100%; object-fit:contain; display:block; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -23,11 +23,11 @@
   const RUMBLE = 3;
   const CAM_HEIGHT = 1100;
   const CAM_DEPTH = 0.78;
-  const DRAW_N = 160;
-  const N_SEG = 1400;
+  const DRAW_N = 110;
 
-  const SPEED_START = 600, SPEED_MAX = 2500, SPEED_ACCEL = 16;
-  const STEER_ACCEL = 3.2, STEER_DAMP = 3.0, CENTRIFUGAL = 0.06;
+  const N_SEG = 1400;
+  const SPEED_START = 950, SPEED_MAX = 2600, SPEED_ACCEL = 20;
+  const STEER_ACCEL = 3.2, STEER_DAMP = 3.0, CENTRIFUGAL = 0.05;
 
   let track = [];
 
@@ -45,14 +45,14 @@
       curve = curveTarget; y = yTarget;
     }
 
-    push(60, 0, 0);
+    push(20, 0, 0);
     push(40, 4, 0);
     push(50, 4, 0);
     push(40, 0, 500);
     push(50, -5, 500);
     push(50, -5, 0);
     push(40, 0, 0);
-    push(70, 0, 0);
+    push(50, 0, 0);
     push(30, 6, 0);
     push(50, 6, -420);
     push(40, 0, -420);
@@ -65,7 +65,7 @@
     push(30, -6, 0);
     push(50, -6, 350);
     push(40, 0, 0);
-    push(70, 0, 0);
+    push(50, 0, 0);
     push(40, 5, 0);
     push(50, 5, -550);
     push(40, 0, -550);
@@ -77,15 +77,14 @@
     push(30, -4, 0);
     push(50, -4, -300);
     push(40, 0, 0);
-    push(80, 0, 0);
+    push(60, 0, 0);
 
     while (track.length < N_SEG) track.push({ curve: 0, y: 0 });
     track.length = N_SEG;
 
-    track[0].obstacle = null;
-    let i = 55;
+    let i = 16;
     while (i < N_SEG - 25) {
-      i += 24 + (Math.random()*28|0);
+      i += 20 + (Math.random()*26|0);
       if (i >= N_SEG - 25) break;
       if (Math.random() < 0.32) {
         const span = 4 + (Math.random()*3|0);
@@ -108,8 +107,9 @@
 
   // ---- game state ----
   let state = "ready";
-  let playerZ, playerX, playerVX, speed, dist, best, bump;
+  let playerZ, playerX, playerVX, speed, dist, best, particles;
   best = Number(localStorage.getItem("slope_best") || 0);
+  particles = [];
 
   const keys = {};
   addEventListener("keydown", e => {
@@ -120,23 +120,29 @@
   });
   addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 
-  let touchDir = 0;
+  let touchDir = 0, pointerDown = false;
+  function dirFromClientX(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    return (clientX - rect.left) < rect.width/2 ? -1 : 1;
+  }
+  canvas.addEventListener("mousedown", e => {
+    e.preventDefault();
+    if (state === "ready" || state === "over") { start(); return; }
+    pointerDown = true; touchDir = dirFromClientX(e.clientX);
+  });
+  addEventListener("mousemove", e => { if (pointerDown) touchDir = dirFromClientX(e.clientX); });
+  addEventListener("mouseup", () => { pointerDown = false; touchDir = 0; });
   canvas.addEventListener("touchstart", e => {
     e.preventDefault();
     if (state === "ready" || state === "over") { start(); return; }
-    const t = e.touches[0], rect = canvas.getBoundingClientRect();
-    touchDir = (t.clientX - rect.left) < rect.width/2 ? -1 : 1;
+    touchDir = dirFromClientX(e.touches[0].clientX);
   }, {passive:false});
-  canvas.addEventListener("touchmove", e => {
-    e.preventDefault();
-    const t = e.touches[0], rect = canvas.getBoundingClientRect();
-    touchDir = (t.clientX - rect.left) < rect.width/2 ? -1 : 1;
-  }, {passive:false});
+  canvas.addEventListener("touchmove", e => { e.preventDefault(); touchDir = dirFromClientX(e.touches[0].clientX); }, {passive:false});
   canvas.addEventListener("touchend", () => { touchDir = 0; });
 
   function start() {
     buildTrack();
-    playerZ = 0; playerX = 0; playerVX = 0; speed = SPEED_START; dist = 0; bump = 0;
+    playerZ = 0; playerX = 0; playerVX = 0; speed = SPEED_START; dist = 0; particles = [];
     state = "play";
   }
 
@@ -146,9 +152,10 @@
     if (sc > best) { best = sc; localStorage.setItem("slope_best", best); }
   }
 
-  let last = performance.now();
+  let last = performance.now(), frameCounter = 0;
   function frame(now) {
     let dt = (now-last)/1000; last = now; if (dt > 0.033) dt = 0.033;
+    frameCounter++;
     if (state === "play") update(dt);
     render(now);
     requestAnimationFrame(frame);
@@ -171,7 +178,12 @@
 
     playerZ += speed*dt;
     dist += speed*dt;
-    bump = Math.max(0, bump - dt*3);
+
+    if (frameCounter % 3 === 0) {
+      particles.push({ x:(Math.random()-0.5)*30, y:10, vy: 90+Math.random()*70, life:0.5, max:0.5 });
+    }
+    for (const p of particles) { p.y += p.vy*dt; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
 
     if (playerX < -1.08 || playerX > 1.08) return die();
     if (seg.gap && playerX > seg.gap.from && playerX < seg.gap.to) return die();
@@ -180,16 +192,24 @@
 
   function render(now) {
     const horizon = H*0.5;
+    const t = state === "play" ? Math.min(1, dist/40000) : 0.15;
+
     const sky = ctx.createLinearGradient(0,0,0,horizon);
-    const t = state === "play" ? Math.min(1, dist/40000) : 0;
-    sky.addColorStop(0, mix("#0c0620","#1a0f30",t));
-    sky.addColorStop(1, mix("#2a1440","#3a1c50",t));
+    sky.addColorStop(0, mix("#0a0620","#150a2e",t));
+    sky.addColorStop(0.55, mix("#241040","#341654",t));
+    sky.addColorStop(1, mix("#4a1f4e", "#5c2452", t));
     ctx.fillStyle = sky; ctx.fillRect(0,0,W,horizon);
+
     ctx.fillStyle = "rgba(255,255,255,.55)";
-    for (let i=0;i<50;i++){ const x=(i*173+((now*0.01)%W))%W, y=(i*97)%horizon; ctx.fillRect(x,y,(i%6===0)?2:1,(i%6===0)?2:1); }
+    for (let i=0;i<50;i++){ const x=(i*173+((now*0.01)%W))%W, y=(i*97)%(horizon*0.8); ctx.fillRect(x,y,(i%6===0)?2:1,(i%6===0)?2:1); }
+
+    drawSun(horizon, t);
+    drawMountains(horizon, 1, "#2a1442", 0.55);
+    drawMountains(horizon, 2, "#3a1c56", 0.8);
+
     ctx.fillStyle = "#0a0512"; ctx.fillRect(0,horizon,W,H-horizon);
 
-    if (state === "ready") { drawBall(W/2, H*0.74, now, 0); drawBanner("SLOPE", "← → or A D to steer", "Space / tap to start"); return; }
+    if (state === "ready") { drawBall(W/2, H*0.74, now, 0, false); vignette(); drawBanner("SLOPE", "← → / A D / drag to steer", "Click, tap, or Space to start"); return; }
 
     const baseSegIndex = Math.floor(playerZ/SEG_LEN);
     const baseRem = playerZ - baseSegIndex*SEG_LEN;
@@ -208,62 +228,93 @@
 
       const sx1 = W/2 + scale1*(x - cameraX)*(W/2);
       const sx2 = W/2 + scale2*(x+dx - cameraX)*(W/2);
-      const sy1 = H/2 - scale1*(seg.y - camHeightNow)*(H/2);
-      const sy2 = H/2 - scale2*(nextSeg.y - camHeightNow)*(H/2);
+      let sy1 = H/2 - scale1*(seg.y - camHeightNow)*(H/2);
+      let sy2 = H/2 - scale2*(nextSeg.y - camHeightNow)*(H/2);
+      if (sy2 >= sy1) sy2 = sy1 - 1;
       const sw1 = scale1*ROAD_HALF*(W/2);
       const sw2 = scale2*ROAD_HALF*(W/2);
 
-      rows.push({ idx, seg, sx1, sy1, sw1, sx2, sy2, sw2, fog: Math.pow(n/DRAW_N, 2.2) });
+      rows.push({ idx, seg, sx1, sy1, sw1, sx2, sy2, sw2, fog: Math.min(1, Math.pow(n/DRAW_N, 2.2)) });
 
       x += dx; dx += seg.curve*0.9;
     }
 
+    const fogHex = mixRGB("#0a0512", "#3a1c56", t);
     for (let n = rows.length-1; n >= 0; n--) {
       const r = rows[n];
-      if (r.sy1 <= r.sy2) continue;
       const dark = Math.floor(r.idx/RUMBLE) % 2 === 0;
 
-      ctx.fillStyle = dark ? "#140a24" : "#190f2c";
+      ctx.fillStyle = fogBlend(dark ? "#140a24" : "#190f2c", fogHex, r.fog);
       ctx.fillRect(0, r.sy2, W, r.sy1-r.sy2+1);
 
       poly(r.sx1-r.sw1*1.14, r.sy1, r.sx1+r.sw1*1.14, r.sy1, r.sx2+r.sw2*1.14, r.sy2, r.sx2-r.sw2*1.14, r.sy2,
-        dark ? "#ff3d6e" : "#f4f0ff");
+        fogBlend(dark ? "#ff3d6e" : "#eaf6ff", fogHex, r.fog));
       poly(r.sx1-r.sw1, r.sy1, r.sx1+r.sw1, r.sy1, r.sx2+r.sw2, r.sy2, r.sx2-r.sw2, r.sy2,
-        dark ? "#150c22" : "#1b1030");
+        fogBlend(dark ? "#150c22" : "#1b1030", fogHex, r.fog));
 
       if (r.idx % (RUMBLE*2) < RUMBLE) {
-        poly(r.sx1-r.sw1*0.02, r.sy1, r.sx1+r.sw1*0.02, r.sy1, r.sx2+r.sw2*0.02, r.sy2, r.sx2-r.sw2*0.02, r.sy2, "#5ec6ff");
+        poly(r.sx1-r.sw1*0.02, r.sy1, r.sx1+r.sw1*0.02, r.sy1, r.sx2+r.sw2*0.02, r.sy2, r.sx2-r.sw2*0.02, r.sy2, fogBlend("#5ec6ff", fogHex, r.fog));
       }
 
-      if (r.seg.gap) {
+      const sane = r.sw1 < W*4 && r.sw2 < W*4;
+      if (r.seg.gap && sane) {
         const a1=r.sx1+r.seg.gap.from*r.sw1, b1=r.sx1+r.seg.gap.to*r.sw1;
         const a2=r.sx2+r.seg.gap.from*r.sw2, b2=r.sx2+r.seg.gap.to*r.sw2;
         poly(a1,r.sy1,b1,r.sy1,b2,r.sy2,a2,r.sy2, "#03020a");
       }
-      if (r.seg.obstacle) {
+      if (r.seg.obstacle && sane) {
         const a1=r.sx1+r.seg.obstacle.from*r.sw1, b1=r.sx1+r.seg.obstacle.to*r.sw1;
-        const hgt = r.sw1*0.85;
+        const hgt = Math.min(r.sw1*0.85, H);
         ctx.fillStyle = "rgba(255,40,70,.35)";
         ctx.fillRect(Math.min(a1,b1), r.sy1-hgt-6, Math.abs(b1-a1), 8);
         poly(a1,r.sy1,b1,r.sy1,b1,r.sy1-hgt,a1,r.sy1-hgt, "#ff2b4a");
         ctx.fillStyle = "rgba(255,255,255,.25)";
         ctx.fillRect(Math.min(a1,b1), r.sy1-hgt, Math.abs(b1-a1), Math.max(2,hgt*0.08));
       }
-
-      if (r.fog > 0.02) { ctx.fillStyle = `rgba(10,5,18,${Math.min(0.92,r.fog)})`; ctx.fillRect(0, r.sy2, W, r.sy1-r.sy2+1); }
     }
 
-    const fogG = ctx.createLinearGradient(0,horizon-70,0,horizon+40);
-    fogG.addColorStop(0,"rgba(10,5,18,0)"); fogG.addColorStop(1,"rgba(10,5,18,.9)");
-    ctx.fillStyle = fogG; ctx.fillRect(0,horizon-70,W,110);
+    const fogG = ctx.createLinearGradient(0,horizon-90,0,horizon+30);
+    fogG.addColorStop(0,"rgba(58,28,86,0)"); fogG.addColorStop(1, mix("rgba(58,28,86,.95)","rgba(92,36,82,.95)",t));
+    ctx.fillStyle = fogG; ctx.fillRect(0,horizon-90,W,120);
 
-    drawBall(W/2, H*0.76, now, playerVX);
+    drawBall(W/2, H*0.76, now, playerVX, true);
 
     ctx.textAlign = "left"; ctx.fillStyle = "#f6ede8"; ctx.font = "700 18px system-ui";
     ctx.fillText("SCORE " + Math.floor(dist/25), 18, 32);
     ctx.textAlign = "right"; ctx.fillText("BEST " + best, W-18, 32);
 
-    if (state === "over") banner("Wipeout!", "Score " + Math.floor(dist/25) + " · Best " + best, "Space / tap to try again");
+    vignette();
+    if (state === "over") banner("Wipeout!", "Score " + Math.floor(dist/25) + " · Best " + best, "Click, tap, or Space to try again");
+  }
+
+  function drawSun(horizon, t) {
+    const cx = W/2, cy = horizon - 10, r = 130;
+    const glow = ctx.createRadialGradient(cx,cy,0,cx,cy,r*2.2);
+    glow.addColorStop(0, mix("rgba(255,140,120,.55)","rgba(255,170,110,.6)",t));
+    glow.addColorStop(1, "rgba(255,140,120,0)");
+    ctx.fillStyle = glow; ctx.fillRect(cx-r*2.2, cy-r*2.2, r*4.4, r*4.4);
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.clip();
+    const sunG = ctx.createLinearGradient(0,cy-r,0,cy+r);
+    sunG.addColorStop(0, "#ffd88a"); sunG.addColorStop(0.5, "#ff7a68"); sunG.addColorStop(1, "#c23fae");
+    ctx.fillStyle = sunG; ctx.fillRect(cx-r,cy-r,r*2,r*2);
+    ctx.fillStyle = "#150a2e";
+    for (let i=0;i<5;i++) ctx.fillRect(cx-r, cy-r*0.15+i*14, r*2, 5);
+    ctx.restore();
+  }
+
+  function drawMountains(horizon, seed, color, heightScale) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, horizon);
+    const n = 7;
+    for (let i=0;i<=n;i++) {
+      const px = (W/n)*i;
+      const py = horizon - (30+ (Math.sin(i*1.7+seed*3)*0.5+0.5)*70*heightScale);
+      ctx.lineTo(px, py);
+    }
+    ctx.lineTo(W, horizon); ctx.closePath(); ctx.fill();
   }
 
   function poly(x1,y1,x2,y2,x3,y3,x4,y4,color) {
@@ -271,11 +322,25 @@
     ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.lineTo(x4,y4); ctx.closePath(); ctx.fill();
   }
 
-  function drawBall(x, y, now, vx) {
+  function drawBall(x, y, now, vx, moving) {
     const tilt = Math.max(-0.5, Math.min(0.5, vx*0.35));
     const spin = (now*0.006 + (state==="play"? dist*0.02:0));
+    const bx = x + tilt*30, by = y + Math.sin(now/180)*2;
+
+    if (moving) {
+      for (const p of particles) {
+        const a = Math.max(0, p.life/p.max);
+        ctx.fillStyle = `rgba(255,120,110,${a*0.5})`;
+        ctx.beginPath(); ctx.arc(bx+p.x, by+p.y, 3*a, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    const glow = ctx.createRadialGradient(bx,by,4,bx,by,42);
+    glow.addColorStop(0,"rgba(255,90,90,.45)"); glow.addColorStop(1,"rgba(255,90,90,0)");
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(bx,by,42,0,Math.PI*2); ctx.fill();
+
     ctx.save();
-    ctx.translate(x + tilt*30, y + Math.sin(now/180)*2);
+    ctx.translate(bx, by);
     ctx.rotate(tilt*0.4);
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(0,20,22,7,0,0,Math.PI*2); ctx.fill();
     const g = ctx.createRadialGradient(-6,-8,3,0,0,22);
@@ -286,12 +351,42 @@
     ctx.restore();
   }
 
+  function vignette() {
+    const g = ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.8);
+    g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,"rgba(0,0,0,.45)");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+
+  const fogCache = {};
+  function fogBlend(color, fogHexColor, f) {
+    if (f < 0.03) return color;
+    const key = color+"|"+Math.round(f*20);
+    if (fogCache[key]) return fogCache[key];
+    const a = hex(color), b = fogHexColor;
+    const q = Math.round(f*20)/20;
+    const r = Math.round(a[0]+(b[0]-a[0])*q), g = Math.round(a[1]+(b[1]-a[1])*q), bl = Math.round(a[2]+(b[2]-a[2])*q);
+    const out = `rgb(${r},${g},${bl})`;
+    fogCache[key] = out;
+    return out;
+  }
+
+  function mixRGB(c1, c2, t) {
+    const a = hexA(c1), b = hexA(c2);
+    return [Math.round(a[0]+(b[0]-a[0])*t), Math.round(a[1]+(b[1]-a[1])*t), Math.round(a[2]+(b[2]-a[2])*t)];
+  }
   function mix(c1, c2, t) {
-    const a = hex(c1), b = hex(c2);
+    const a = hexA(c1), b = hexA(c2);
     const r = Math.round(a[0]+(b[0]-a[0])*t), g = Math.round(a[1]+(b[1]-a[1])*t), bl = Math.round(a[2]+(b[2]-a[2])*t);
-    return `rgb(${r},${g},${bl})`;
+    const alpha = a[3]!==undefined || b[3]!==undefined ? (a[3]??1)+((b[3]??1)-(a[3]??1))*t : null;
+    return alpha!==null ? `rgba(${r},${g},${bl},${alpha.toFixed(3)})` : `rgb(${r},${g},${bl})`;
   }
   function hex(h) { h = h.replace("#",""); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+  function hexA(c) {
+    if (c[0] === "#") return hex(c);
+    const m = c.match(/rgba?\(([^)]+)\)/);
+    const parts = m[1].split(",").map(s=>parseFloat(s));
+    return parts;
+  }
 
   function drawBanner(title, sub, sub2) { banner(title, sub, sub2); }
   function banner(title, sub, sub2) {
