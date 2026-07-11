@@ -1,10 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://reddomo.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://reddomo.com/about.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://reddomo.com/game.html?id=rooftop-rumble</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://reddomo.com/game.html?id=2048</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://reddomo.com/game.html?id=snake</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://reddomo.com/game.html?id=minecraft-classic</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://reddomo.com/game.html?id=a-dark-room</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://reddomo.com/about.html</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://reddomo.com/privacy.html</loc><lastmod>2026-07-10</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+
+  <!-- self-hosted originals & classics -->
+  <url><loc>https://reddomo.com/game.html?id=age-of-war</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=2048</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=doom</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=snake</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=minesweeper</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=breakout</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=asteroids</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=connect-four</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=flappy-domo</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- play-on-site embeds -->
+  <url><loc>https://reddomo.com/game.html?id=minecraft-classic</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=sandspiel</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=hexgl</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=hextris</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=astray</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=dino-run</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=a-dark-room</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=paperclips</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=hello-wordl</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=solitaire</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=untrusted</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=candy-box-2</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=trimps</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=isleward</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=ztype</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=skribbl</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=krunker</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=diep</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=zombsroyale</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=little-alchemy-2</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://reddomo.com/game.html?id=typeracer</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>

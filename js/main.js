@@ -130,4 +130,32 @@
   }
 
   render();
+
+  // ---- ItemList structured data: expose the full catalog to search engines ----
+  (function itemListLd() {
+    const visible = CATALOG.filter((g) => !g.hidden);
+    const items = visible.map((g, i) => {
+      const url = g.type === "link"
+        ? g.src
+        : "https://reddomo.com/game.html?id=" + encodeURIComponent(g.id);
+      return {
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": g.title,
+        "url": url,
+        ...(g.thumb ? { "image": "https://reddomo.com/" + g.thumb.replace(/^\//, "") } : {}),
+      };
+    });
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Reddomo — browser games",
+      "numberOfItems": items.length,
+      "itemListElement": items,
+    };
+    const s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.textContent = JSON.stringify(ld);
+    document.head.appendChild(s);
+  })();
 })();

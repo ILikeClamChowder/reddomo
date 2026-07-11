@@ -21,12 +21,8 @@ const CATEGORIES = ["All", "Multiplayer", "Arcade", "Puzzle", "Idle", "Sandbox",
 
 const CATALOG = [
   // ---- our originals (self-hosted) ----
-  {
-    id: "rooftop-rumble", title: "Rooftop Rumble", cat: "Multiplayer",
-    tags: ["2 player", "fight", "physics", "brawler"], type: "self",
-    blurb: "Two-player ragdoll brawl on the rooftops. Grab a friend.",
-    thumb: "assets/thumbs/rooftop-rumble.svg", icon: "🥊", color: "#e23b3b", featured: true, hidden: true,
-  },
+  // Note: rooftop-rumble, slope, and big-tower-tiny-square are temporarily shelved
+  // (game files + thumbs remain in /games and /assets/thumbs; re-add their entries here later).
   {
     id: "snake", title: "Snake", cat: "Arcade", tags: ["classic", "retro"], type: "self",
     blurb: "The classic. Eat, grow, don't bite yourself.",
@@ -46,40 +42,32 @@ const CATALOG = [
   {
     id: "minesweeper", title: "Minesweeper", cat: "Puzzle",
     tags: ["classic", "logic", "mines"], type: "self",
-    blurb: "The timeless classic — clear the field without hitting a mine.", icon: "💣", color: "#6a7079",
+    blurb: "The timeless classic — clear the field without hitting a mine.",
+    thumb: "assets/thumbs/minesweeper.svg", icon: "💣", color: "#6a7079",
   },
   {
     id: "breakout", title: "Breakout", cat: "Arcade",
     tags: ["arcade", "paddle", "bricks", "classic"], type: "self",
-    blurb: "Bounce the ball, smash every brick. Don't drop it!", icon: "🧱", color: "#ff5a4a",
+    blurb: "Bounce the ball, smash every brick. Don't drop it!",
+    thumb: "assets/thumbs/breakout.svg", icon: "🧱", color: "#141826",
   },
   {
     id: "asteroids", title: "Asteroids", cat: "Arcade",
     tags: ["space", "shooter", "retro", "vector", "classic"], type: "self",
-    blurb: "Rotate, thrust, and blast the rocks in this vector classic.", icon: "🚀", color: "#20203a",
+    blurb: "Rotate, thrust, and blast the rocks in this vector classic.",
+    thumb: "assets/thumbs/asteroids.svg", icon: "🚀", color: "#20203a",
   },
   {
     id: "connect-four", title: "Connect Four", cat: "Multiplayer",
     tags: ["board", "strategy", "2 player", "classic"], type: "self",
-    blurb: "Drop discs, connect four in a row. Vs a friend or the Domo AI.", icon: "🔴", color: "#2b4c9b",
+    blurb: "Drop discs, connect four in a row. Vs a friend or the Domo AI.",
+    thumb: "assets/thumbs/connect-four.svg", icon: "🔴", color: "#2b4c9b",
   },
   {
     id: "age-of-war", title: "Empire Rush", cat: "Multiplayer",
     tags: ["strategy", "base defense", "evolution", "ai", "economy", "tug of war"], type: "self",
     blurb: "Grow your economy, spawn troops, and evolve through 5 ages to crush the enemy base.",
     thumb: "assets/thumbs/age-of-war.svg", icon: "🏰", color: "#453a5a", featured: true,
-  },
-  {
-    id: "slope", title: "Slope", cat: "Arcade",
-    tags: ["3d", "endless", "runner", "reflex", "ball", "precision"], type: "self",
-    blurb: "Steer the ball down an endless neon slope. One slip and it's over.",
-    thumb: "assets/thumbs/slope.svg", icon: "🎢", color: "#3a1c6b", featured: true, hidden: true,
-  },
-  {
-    id: "big-tower-tiny-square", title: "Big Tower Tiny Square", cat: "Skill",
-    tags: ["platformer", "climb", "precision", "rage game", "checkpoints"], type: "self",
-    blurb: "Climb a brutal tower one tiny jump at a time. Spikes, movers, and crumbling floors await.",
-    thumb: "assets/thumbs/big-tower-tiny-square.svg", icon: "🗼", color: "#4a3a63", featured: true, hidden: true,
   },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
@@ -92,7 +80,8 @@ const CATALOG = [
   {
     id: "sandspiel", title: "Sandspiel", cat: "Sandbox",
     tags: ["falling sand", "physics", "toy", "elements"], type: "embed", src: "https://sandspiel.club/",
-    blurb: "A mesmerizing falling-sand playground — fire, water, plants, lava.", icon: "🧪", color: "#d97e33", featured: true,
+    blurb: "A mesmerizing falling-sand playground — fire, water, plants, lava.",
+    thumb: "assets/thumbs/sandspiel.svg", icon: "🧪", color: "#201812", featured: true,
   },
   {
     id: "hexgl", title: "HexGL", cat: "Arcade",
@@ -115,12 +104,14 @@ const CATALOG = [
   {
     id: "astray", title: "Astray", cat: "Arcade",
     tags: ["maze", "3d", "marble"], type: "embed", src: "https://wwwtyro.github.io/Astray/",
-    blurb: "Tilt a marble through a slick 3D maze.", icon: "🌀", color: "#6a5cff",
+    blurb: "Tilt a marble through a slick 3D maze.",
+    thumb: "assets/thumbs/astray.svg", icon: "🌀", color: "#141c1e",
   },
   {
     id: "dino-run", title: "Dino Run", cat: "Arcade",
     tags: ["runner", "chrome", "t-rex", "endless"], type: "embed", src: "https://wayou.github.io/t-rex-runner/",
-    blurb: "The offline Chrome dino — jump the cacti, chase a high score.", icon: "🦖", color: "#5a6570",
+    blurb: "The offline Chrome dino — jump the cacti, chase a high score.",
+    thumb: "assets/thumbs/dino-run.svg", icon: "🦖", color: "#232830",
   },
   {
     id: "a-dark-room", title: "A Dark Room", cat: "Idle",
@@ -131,7 +122,8 @@ const CATALOG = [
   {
     id: "paperclips", title: "Universal Paperclips", cat: "Idle",
     tags: ["incremental", "clicker", "ai"], type: "embed", src: "https://www.decisionproblem.com/paperclips/",
-    blurb: "Turn the whole universe into paperclips. Weirdly gripping.", icon: "📎", color: "#9aa4ad",
+    blurb: "Turn the whole universe into paperclips. Weirdly gripping.",
+    thumb: "assets/thumbs/paperclips.svg", icon: "📎", color: "#e0ded9",
   },
   {
     id: "hello-wordl", title: "hello wordl", cat: "Puzzle",
@@ -142,22 +134,26 @@ const CATALOG = [
   {
     id: "solitaire", title: "Solitaire", cat: "Puzzle",
     tags: ["cards", "klondike", "patience"], type: "embed", src: "https://www.solitr.com/",
-    blurb: "Classic Klondike solitaire — the study-hall staple.", icon: "🃏", color: "#2f7d4f",
+    blurb: "Classic Klondike solitaire — the study-hall staple.",
+    thumb: "assets/thumbs/solitaire.svg", icon: "🃏", color: "#124a2f",
   },
   {
     id: "untrusted", title: "Untrusted", cat: "Puzzle",
     tags: ["coding", "javascript", "escape"], type: "embed", src: "https://alexnisnevich.github.io/untrusted/",
-    blurb: "Escape each level by rewriting its JavaScript. Genius.", icon: "💻", color: "#2fb3a0",
+    blurb: "Escape each level by rewriting its JavaScript. Genius.",
+    thumb: "assets/thumbs/untrusted.svg", icon: "💻", color: "#0e140e",
   },
   {
     id: "candy-box-2", title: "Candy Box 2", cat: "Idle",
     tags: ["incremental", "adventure", "ascii"], type: "embed", src: "https://candybox2.github.io/",
-    blurb: "A quirky incremental adventure that keeps unfolding. Eat the candies… or don't.", icon: "🍬", color: "#d94f8a",
+    blurb: "A quirky incremental adventure that keeps unfolding. Eat the candies… or don't.",
+    thumb: "assets/thumbs/candy-box-2.svg", icon: "🍬", color: "#1a1220",
   },
   {
     id: "trimps", title: "Trimps", cat: "Idle",
     tags: ["incremental", "idle", "strategy"], type: "embed", src: "https://trimps.github.io/",
-    blurb: "Deep idle strategy — breed Trimps, explore, and never stop growing.", icon: "📈", color: "#4a9d7f",
+    blurb: "Deep idle strategy — breed Trimps, explore, and never stop growing.",
+    thumb: "assets/thumbs/trimps.svg", icon: "📈", color: "#12211a",
   },
   {
     id: "isleward", title: "Isleward", cat: "Multiplayer",
@@ -186,7 +182,8 @@ const CATALOG = [
   {
     id: "diep", title: "Diep.io", cat: "Arcade",
     tags: ["io", "tanks", "shooter", "multiplayer", "upgrade"], type: "embed", src: "https://diep.io/",
-    blurb: "Upgrade your tank, farm shapes, and take down the leaderboard.", icon: "🔺", color: "#4a7a3a",
+    blurb: "Upgrade your tank, farm shapes, and take down the leaderboard.",
+    thumb: "assets/thumbs/diep.svg", icon: "🔺", color: "#2b333d",
   },
   {
     id: "zombsroyale", title: "ZombsRoyale.io", cat: "Multiplayer",
@@ -217,6 +214,7 @@ const CATALOG = [
   {
     id: "qwop", title: "QWOP", cat: "Skill",
     tags: ["ragdoll", "foddy", "hard"], type: "link", src: "https://www.foddy.net/Athletics.html",
-    blurb: "The infamous running game. Good luck. Opens on Foddy's site.", icon: "🏃", color: "#4f74c9",
+    blurb: "The infamous running game. Good luck. Opens on Foddy's site.",
+    thumb: "assets/thumbs/qwop.svg", icon: "🏃", color: "#222d40",
   },
 ];
