@@ -75,7 +75,7 @@ const CATALOG = [
     id: "minecraft-classic", title: "Minecraft Classic", cat: "Sandbox",
     tags: ["build", "blocks", "mojang"], type: "embed", src: "https://classic.minecraft.net/",
     blurb: "The original Minecraft, free from Mojang. Build anything.",
-    thumb: "assets/thumbs/minecraft-classic.svg", icon: "⛏️", color: "#5a9e42", featured: true,
+    thumb: "assets/thumbs/minecraft-classic.jpg", icon: "⛏️", color: "#5a9e42", featured: true,
   },
   {
     id: "sandspiel", title: "Sandspiel", cat: "Sandbox",
@@ -183,7 +183,7 @@ const CATALOG = [
     id: "diep", title: "Diep.io", cat: "Arcade",
     tags: ["io", "tanks", "shooter", "multiplayer", "upgrade"], type: "embed", src: "https://diep.io/",
     blurb: "Upgrade your tank, farm shapes, and take down the leaderboard.",
-    thumb: "assets/thumbs/diep.svg", icon: "🔺", color: "#2b333d",
+    thumb: "assets/thumbs/diep.png", icon: "🔺", color: "#2b333d",
   },
   {
     id: "zombsroyale", title: "ZombsRoyale.io", cat: "Multiplayer",
