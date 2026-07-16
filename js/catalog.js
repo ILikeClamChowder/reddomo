@@ -24,6 +24,24 @@ const CATALOG = [
   // Note: rooftop-rumble, slope, and big-tower-tiny-square are temporarily shelved
   // (game files + thumbs remain in /games and /assets/thumbs; re-add their entries here later).
   {
+    id: "potato-patter", title: "Potato Patter", cat: "Idle",
+    tags: ["clicker", "incremental", "idle", "original", "potato"], type: "self",
+    blurb: "Tap the spud, buy Idahoans, prestige for more — an original clicker by Tate Bell.",
+    thumb: "assets/thumbs/potato-patter.jpg", icon: "🥔", color: "#3a2a16", featured: true,
+  },
+  {
+    id: "slap-marine", title: "Slap-Marine", cat: "Arcade",
+    tags: ["survival", "underwater", "waves", "action", "original"], type: "self",
+    blurb: "Dive deep and slap your way through endless swarms of fish — an original underwater survival brawler by Tate Bell.",
+    thumb: "assets/thumbs/slap-marine.jpg", icon: "🤿", color: "#12283a", featured: true,
+  },
+  {
+    id: "farty-mc-fly", title: "Farty McFly", cat: "Skill",
+    tags: ["platformer", "physics", "launch", "levels", "original"], type: "self",
+    blurb: "Fart your way through stormy obstacle courses — an original momentum platformer by Tate Bell.",
+    thumb: "assets/thumbs/farty-mc-fly.jpg", icon: "💨", color: "#20202e", featured: true,
+  },
+  {
     id: "snake", title: "Snake", cat: "Arcade", tags: ["classic", "retro"], type: "self",
     blurb: "The classic. Eat, grow, don't bite yourself.",
     thumb: "assets/thumbs/snake.svg", icon: "🐍", color: "#2f9e57",
@@ -136,12 +154,6 @@ const CATALOG = [
     tags: ["cards", "klondike", "patience"], type: "embed", src: "https://www.solitr.com/",
     blurb: "Classic Klondike solitaire — the study-hall staple.",
     thumb: "assets/thumbs/solitaire.svg", icon: "🃏", color: "#124a2f",
-  },
-  {
-    id: "untrusted", title: "Untrusted", cat: "Puzzle",
-    tags: ["coding", "javascript", "escape"], type: "embed", src: "https://alexnisnevich.github.io/untrusted/",
-    blurb: "Escape each level by rewriting its JavaScript. Genius.",
-    thumb: "assets/thumbs/untrusted.svg", icon: "💻", color: "#0e140e",
   },
   {
     id: "candy-box-2", title: "Candy Box 2", cat: "Idle",
