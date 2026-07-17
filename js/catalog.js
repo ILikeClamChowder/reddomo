@@ -30,13 +30,13 @@ const CATALOG = [
     thumb: "assets/thumbs/potato-patter.jpg", icon: "🥔", color: "#3a2a16",
   },
   {
-    id: "slap-marine", title: "Slap-Marine", cat: "Arcade",
+    id: "slap-marine", title: "Slap-Marine", cat: "Arcade", ar: "16 / 9",
     tags: ["survival", "underwater", "waves", "action", "original"], type: "self",
     blurb: "Dive deep and slap your way through endless swarms of fish — an original underwater survival brawler by Tate Bell.",
     thumb: "assets/thumbs/slap-marine.jpg", icon: "🤿", color: "#12283a",
   },
   {
-    id: "farty-mc-fly", title: "Farty McFly", cat: "Skill",
+    id: "farty-mc-fly", title: "Farty McFly", cat: "Skill", ar: "16 / 9",
     tags: ["platformer", "physics", "launch", "levels", "original"], type: "self",
     blurb: "Fart your way through stormy obstacle courses — an original momentum platformer by Tate Bell.",
     thumb: "assets/thumbs/farty-mc-fly.jpg", icon: "💨", color: "#20202e",
