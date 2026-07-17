@@ -68,7 +68,7 @@
     s.textContent = JSON.stringify(ld);
     document.head.appendChild(s);
   })();
-  frame.src = game.type === "embed" ? game.src : `games/${game.id}/index.html?v=27`;
+  frame.src = game.type === "embed" ? game.src : `games/${game.id}/index.html?v=53`;
   if (game.type === "embed") tipEl.textContent = "Loaded from the game's official free site.";
 
   fsBtn.addEventListener("click", () => {
