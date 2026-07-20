@@ -44,7 +44,7 @@ const CATALOG = [
   {
     id: "snake", title: "Snake", cat: "Arcade", tags: ["classic", "retro"], type: "self",
     blurb: "The classic. Eat, grow, don't bite yourself.",
-    thumb: "assets/thumbs/snake.svg", icon: "🐍", color: "#2f9e57",
+    thumb: "assets/thumbs/snake.jpg", icon: "🐍", color: "#2f9e57",
   },
   {
     id: "2048", title: "2048", cat: "Puzzle", tags: ["numbers", "slide", "brain"], type: "self",
@@ -61,31 +61,31 @@ const CATALOG = [
     id: "minesweeper", title: "Minesweeper", cat: "Puzzle",
     tags: ["classic", "logic", "mines"], type: "self",
     blurb: "The timeless classic — clear the field without hitting a mine.",
-    thumb: "assets/thumbs/minesweeper.svg", icon: "💣", color: "#6a7079",
+    thumb: "assets/thumbs/minesweeper.jpg", icon: "💣", color: "#6a7079",
   },
   {
     id: "breakout", title: "Breakout", cat: "Arcade",
     tags: ["arcade", "paddle", "bricks", "classic"], type: "self",
     blurb: "Bounce the ball, smash every brick. Don't drop it!",
-    thumb: "assets/thumbs/breakout.svg", icon: "🧱", color: "#141826",
+    thumb: "assets/thumbs/breakout.jpg", icon: "🧱", color: "#141826",
   },
   {
     id: "asteroids", title: "Asteroids", cat: "Arcade",
     tags: ["space", "shooter", "retro", "vector", "classic"], type: "self",
     blurb: "Rotate, thrust, and blast the rocks in this vector classic.",
-    thumb: "assets/thumbs/asteroids.svg", icon: "🚀", color: "#20203a",
+    thumb: "assets/thumbs/asteroids.jpg", icon: "🚀", color: "#20203a",
   },
   {
     id: "connect-four", title: "Connect Four", cat: "Multiplayer",
     tags: ["board", "strategy", "2 player", "classic"], type: "self",
     blurb: "Drop discs, connect four in a row. Vs a friend or the Domo AI.",
-    thumb: "assets/thumbs/connect-four.svg", icon: "🔴", color: "#2b4c9b",
+    thumb: "assets/thumbs/connect-four.jpg", icon: "🔴", color: "#2b4c9b",
   },
   {
     id: "age-of-war", title: "Empire Rush", cat: "Multiplayer",
     tags: ["strategy", "base defense", "evolution", "ai", "economy", "tug of war"], type: "self",
     blurb: "Grow your economy, spawn troops, and evolve through 5 ages to crush the enemy base.",
-    thumb: "assets/thumbs/age-of-war.svg", icon: "🏰", color: "#453a5a", featured: true,
+    thumb: "assets/thumbs/age-of-war.jpg", icon: "🏰", color: "#453a5a", featured: true,
   },
 
   // ---- embedded (play on our site; loaded from the game's official free page) ----
@@ -99,7 +99,7 @@ const CATALOG = [
     id: "sandspiel", title: "Sandspiel", cat: "Sandbox",
     tags: ["falling sand", "physics", "toy", "elements"], type: "embed", src: "https://sandspiel.club/",
     blurb: "A mesmerizing falling-sand playground — fire, water, plants, lava.",
-    thumb: "assets/thumbs/sandspiel.svg", icon: "🧪", color: "#201812", featured: true,
+    thumb: "assets/thumbs/sandspiel.png", icon: "🧪", color: "#201812", featured: true,
   },
   {
     id: "hexgl", title: "HexGL", cat: "Arcade",
@@ -129,7 +129,7 @@ const CATALOG = [
     id: "dino-run", title: "Dino Run", cat: "Arcade",
     tags: ["runner", "chrome", "t-rex", "endless"], type: "embed", src: "https://wayou.github.io/t-rex-runner/",
     blurb: "The offline Chrome dino — jump the cacti, chase a high score.",
-    thumb: "assets/thumbs/dino-run.svg", icon: "🦖", color: "#232830",
+    thumb: "assets/thumbs/dino-run.png", icon: "🦖", color: "#232830",
   },
   {
     id: "a-dark-room", title: "A Dark Room", cat: "Idle",
@@ -141,7 +141,7 @@ const CATALOG = [
     id: "paperclips", title: "Universal Paperclips", cat: "Idle",
     tags: ["incremental", "clicker", "ai"], type: "embed", src: "https://www.decisionproblem.com/paperclips/",
     blurb: "Turn the whole universe into paperclips. Weirdly gripping.",
-    thumb: "assets/thumbs/paperclips.svg", icon: "📎", color: "#e0ded9",
+    thumb: "assets/thumbs/paperclips.png", icon: "📎", color: "#e0ded9",
   },
   {
     id: "hello-wordl", title: "hello wordl", cat: "Puzzle",
@@ -153,7 +153,7 @@ const CATALOG = [
     id: "solitaire", title: "Solitaire", cat: "Puzzle",
     tags: ["cards", "klondike", "patience"], type: "embed", src: "https://www.solitr.com/",
     blurb: "Classic Klondike solitaire — the study-hall staple.",
-    thumb: "assets/thumbs/solitaire.svg", icon: "🃏", color: "#124a2f",
+    thumb: "assets/thumbs/solitaire.jpg", icon: "🃏", color: "#124a2f",
   },
   {
     id: "candy-box-2", title: "Candy Box 2", cat: "Idle",
@@ -227,6 +227,6 @@ const CATALOG = [
     id: "qwop", title: "QWOP", cat: "Skill",
     tags: ["ragdoll", "foddy", "hard"], type: "link", src: "https://www.foddy.net/Athletics.html",
     blurb: "The infamous running game. Good luck. Opens on Foddy's site.",
-    thumb: "assets/thumbs/qwop.svg", icon: "🏃", color: "#222d40",
+    thumb: "assets/thumbs/qwop.jpg", icon: "🏃", color: "#222d40",
   },
 ];
